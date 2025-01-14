@@ -1,0 +1,115 @@
+/* Login.css */
+
+.auth-container.movie-themed {
+  background-color: #f0f0f0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-card {
+  background-color: #ffffff;
+  border-radius: 15px;
+  padding: 2rem;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+  width: 100%;
+}
+
+.movie-reel-animation {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.movie-icon {
+  font-size: 4rem;
+  color: #3474b0;
+  animation: spin 5s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.auth-header {
+  color: #333333;
+  font-size: 2rem;
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.auth-subheader {
+  color: #666666;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.input-group-text {
+  background-color: #f8f8f8;
+  border: 1px solid #e0e0e0;
+  color: #333333;
+}
+
+.form-control {
+  border: 1px solid #e0e0e0;
+  color: #333333;
+}
+
+.form-control::placeholder {
+  color: #999999;
+}
+
+.password-toggle {
+  background-color: #f8f8f8;
+  border: 1px solid #e0e0e0;
+  color: #333333;
+  align-items: center;
+}
+
+.login-button {
+  background-color: #3474b0;
+  border: none;
+  color: #ffffff;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.login-button:hover {
+  background-color: #2c639d;
+  transform: scale(1.05);
+}
+
+.forgot-password-link,
+.register-now-link {
+  color: #e50914;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.forgot-password-link:hover,
+.register-now-link:hover {
+  color: #f40612;
+  text-decoration: underline;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+  .auth-card {
+    padding: 1.5rem;
+  }
+
+  .auth-header {
+    font-size: 1.75rem;
+  }
+
+  .auth-subheader {
+    font-size: 0.9rem;
+  }
+}
