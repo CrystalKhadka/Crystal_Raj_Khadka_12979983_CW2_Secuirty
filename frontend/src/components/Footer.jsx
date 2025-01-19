@@ -1,61 +1,120 @@
-import React from "react";
-import { Link } from "react-router-dom";
-import "bootstrap/dist/css/bootstrap.min.css"; // Ensure Bootstrap is included
-import "./FooterB.css"; // Custom CSS file for additional styling
-import logo from "./logo.png"; // Import the logo image
+import {
+  Box,
+  Container,
+  Divider,
+  Link,
+  Stack,
+  styled,
+  Typography,
+  useTheme,
+} from '@mui/material';
+import React from 'react';
+import { Link as RouterLink } from 'react-router-dom';
 
-const FooterB = () => {
-  const user = JSON.parse(localStorage.getItem("user"));
-  return user != null && user.isAdmin ? (
-    <></>
-  ) : (
-    <footer className="bg-light text-center text-white">
-      {/* Grid container */}
-      <div className="container-fluid p-4">
-        {/* Grid row */}
-        <div className="row">
-          {/* Grid column */}
-          <div className="col-lg-12 mb-4 mb-md-0">
-            <ul className="list-unstyled d-flex justify-content-center mb-0">
-              <li className="mx-3">
-                <Link to="/aboutUs" className="text-primary no-underline">
-                  About Us
-                </Link>
-              </li>
-              <li className="mx-3">
-                <Link to="/contactUs" className="text-primary no-underline">
-                  Contact Us
-                </Link>
-              </li>
-              
-            </ul>
-            <h5 className="text-dark mt-4">Cold Films</h5>
-          </div>
-          {/* Grid column */}
-        </div>
-        {/* Grid row */}
-        <div className="row mt-4">
-          {/* Grid column */}
-          <div className="col-lg-12 mb-2 mb-md-0">
-            <img src={logo} alt="Cold Films Logo" style={{ height: "100px" }} />
-            <p className="text-secondary mt-3">
-              Bringing the magic of movies to life.
-              <br />
-              Enjoy the ultimate cinematic experience with us.
-            </p>
-          </div>
-          {/* Grid column */}
-        </div>
-      </div>
-      {/* Grid container */}
+const StyledLink = styled(RouterLink)(({ theme }) => ({
+  color: theme.palette.primary.main,
+  textDecoration: 'none',
+  '&:hover': {
+    color: theme.palette.primary.dark,
+    textDecoration: 'none',
+  },
+}));
 
-      {/* Copyright */}
-      <div className="text-center p-3 text-secondary">
-        © 2024 Copyright: Cold Films
-      </div>
-      {/* Copyright */}
-    </footer>
+const Footer = () => {
+  const theme = useTheme();
+  const user = JSON.parse(localStorage.getItem('user'));
+
+  if (user?.isAdmin) {
+    return null;
+  }
+
+  return (
+    <Box
+      component='footer'
+      sx={{
+        bgcolor: 'background.paper',
+        py: 6,
+        mt: 'auto',
+      }}>
+      <Container maxWidth='lg'>
+        <Stack
+          spacing={4}
+          alignItems='center'>
+          {/* Navigation Links */}
+          <Stack
+            direction='row'
+            spacing={4}
+            justifyContent='center'
+            divider={
+              <Divider
+                orientation='vertical'
+                flexItem
+                sx={{ bgcolor: 'grey.300' }}
+              />
+            }>
+            <Link
+              component={StyledLink}
+              to='/aboutUs'
+              variant='subtitle1'>
+              About Us
+            </Link>
+            <Link
+              component={StyledLink}
+              to='/contactUs'
+              variant='subtitle1'>
+              Contact Us
+            </Link>
+          </Stack>
+
+          {/* Logo and Company Name */}
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography
+              variant='h4'
+              component='h1'
+              sx={{
+                background: theme.palette.primary.main,
+                backgroundImage: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.primary.light})`,
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                color: 'transparent',
+                fontWeight: 'bold',
+                mb: 2,
+              }}>
+              Cold Films
+            </Typography>
+            <img
+              src='/logo.png'
+              alt='Cold Films Logo'
+              style={{
+                height: '100px',
+                margin: '16px 0',
+              }}
+            />
+          </Box>
+
+          {/* Tagline */}
+          <Typography
+            variant='subtitle1'
+            color='text.secondary'
+            align='center'
+            sx={{ maxWidth: 'sm', mx: 'auto' }}>
+            Bringing the magic of movies to life.
+            <br />
+            Enjoy the ultimate cinematic experience with us.
+          </Typography>
+
+          {/* Copyright */}
+          <Typography
+            variant='body2'
+            color='text.secondary'
+            align='center'
+            sx={{ mt: 2 }}>
+            © {new Date().getFullYear()} Copyright: Cold Films
+          </Typography>
+        </Stack>
+      </Container>
+    </Box>
   );
 };
 
-export default FooterB;
+export default Footer;

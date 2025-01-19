@@ -1,165 +1,229 @@
-import React from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import "bootstrap/dist/css/bootstrap.min.css";
-import AdminNavbar from "./AdminNavbar";
+import MenuIcon from '@mui/icons-material/Menu';
+import {
+  AppBar,
+  Box,
+  Button,
+  Container,
+  Drawer,
+  IconButton,
+  List,
+  ListItem,
+  ListItemText,
+  Menu,
+  MenuItem,
+  Toolbar,
+  Typography,
+  useMediaQuery,
+  useTheme,
+} from '@mui/material';
 import { googleLogout } from '@react-oauth/google';
+import React, { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import AdminNavbar from './AdminNavbar';
 
 const Navbar = () => {
-  const navigate = useNavigate();
   const location = useLocation();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
-  const user = JSON.parse(localStorage.getItem("user"));
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const user = JSON.parse(localStorage.getItem('user'));
 
   const handleLogout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
     googleLogout();
-    window.location.href="/login";
+    window.location.href = '/login';
+  };
+
+  const handleProfileMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleProfileMenuClose = () => {
+    setAnchorEl(null);
   };
 
   const isActive = (path) => {
-    return location.pathname === path ? "active" : "";
+    return location.pathname === path;
   };
 
-  const navbarStyle = {
-    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-    background: "linear-gradient(to right, #f8f9fa, #e9ecef)",
-  };
+  const navItems = [
+    { path: '/homepage', label: 'Home' },
+    { path: '/coming-soon', label: 'Coming Soon' },
+    { path: '/tickets', label: 'Tickets' },
+    { path: '/aboutUs', label: 'About Us' },
+    { path: '/contactUs', label: 'Contact Us' },
+  ];
 
-  const brandStyle = {
-    fontSize: "28px",
-    fontWeight: "bold",
-    background: "linear-gradient(45deg, #007bff, #00ff00)",
-    WebkitBackgroundClip: "text",
-    WebkitTextFillColor: "transparent",
-  };
+  if (user?.isAdmin) {
+    return <AdminNavbar />;
+  }
 
-  const linkStyle = {
-    fontSize: "18px",
-    marginRight: "20px",
-    color: "#333",
-    transition: "color 0.3s ease",
-  };
+  const renderMobileMenu = (
+    <Drawer
+      anchor='right'
+      open={mobileMenuOpen}
+      onClose={() => setMobileMenuOpen(false)}>
+      <Box
+        sx={{ width: 250 }}
+        role='presentation'>
+        <List>
+          {navItems.map((item) => (
+            <ListItem
+              key={item.path}
+              component={Link}
+              to={item.path}
+              onClick={() => setMobileMenuOpen(false)}
+              sx={{
+                bgcolor: isActive(item.path)
+                  ? 'action.selected'
+                  : 'transparent',
+              }}>
+              <ListItemText
+                primary={item.label}
+                sx={{
+                  color: isActive(item.path) ? 'primary.main' : 'text.primary',
+                }}
+              />
+            </ListItem>
+          ))}
+        </List>
+      </Box>
+    </Drawer>
+  );
 
-  const activeLinkStyle = {
-    ...linkStyle,
-    fontWeight: "bold",
-    color: "#007bff",
-  };
+  return (
+    <AppBar
+      position='fixed'
+      sx={{
+        bgcolor: 'background.paper',
+        backgroundImage: 'linear-gradient(to right, #f8f9fa, #e9ecef)',
+        color: 'text.primary',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+      }}>
+      <Container maxWidth='xl'>
+        <Toolbar disableGutters>
+          <Typography
+            variant='h6'
+            component={Link}
+            to='/homepage'
+            sx={{
+              mr: 2,
+              fontWeight: 700,
+              fontSize: { xs: '1.5rem', md: '1.75rem' },
+              textDecoration: 'none',
+              background: 'linear-gradient(45deg, #007bff, #00ff00)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              flexGrow: { xs: 1, md: 0 },
+            }}>
+            Cold Films
+          </Typography>
 
-  const buttonStyle = {
-    fontSize: "16px",
-    padding: "8px 16px",
-    borderRadius: "20px",
-    transition: "all 0.3s ease",
-  };
+          {isMobile ? (
+            <IconButton
+              color='inherit'
+              aria-label='open drawer'
+              edge='start'
+              onClick={() => setMobileMenuOpen(true)}>
+              <MenuIcon />
+            </IconButton>
+          ) : (
+            <>
+              <Box
+                sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center' }}>
+                {navItems.map((item) => (
+                  <Button
+                    key={item.path}
+                    component={Link}
+                    to={item.path}
+                    sx={{
+                      mx: 1,
+                      color: isActive(item.path)
+                        ? 'primary.main'
+                        : 'text.primary',
+                      fontSize: '1rem',
+                      fontWeight: isActive(item.path) ? 700 : 400,
+                      '&:hover': {
+                        color: 'primary.main',
+                        backgroundColor: 'transparent',
+                      },
+                    }}>
+                    {item.label}
+                  </Button>
+                ))}
+              </Box>
 
-  return user?.isAdmin ? (
-    <AdminNavbar />
-  ) : (
-    <nav className="navbar navbar-expand-lg navbar-light fixed-top mb-5" style={navbarStyle}>
-      <div className="container-fluid">
-        <Link className="navbar-brand" to="/homepage" style={brandStyle}>
-          Cold Films
-        </Link>
-        <button
-          className="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarSupportedContent"
-          aria-controls="navbarSupportedContent"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
-        >
-          <span className="navbar-toggler-icon"></span>
-        </button>
-        <div className="collapse navbar-collapse" id="navbarSupportedContent">
-          <ul className="navbar-nav mx-auto mb-2 mb-lg-0">
-            <li className="nav-item">
-              <Link
-                className={`nav-link ${isActive("/homepage")}`}
-                to="/homepage"
-                style={isActive("/homepage") ? activeLinkStyle : linkStyle}
-              >
-                Home
-              </Link>
-            </li>
-            <li className="nav-item">
-              <Link
-                className={`nav-link ${isActive("/coming-soon")}`}
-                to="/coming-soon"
-                style={isActive("/coming-soon") ? activeLinkStyle : linkStyle}
-              >
-                Coming Soon
-              </Link>
-            </li>
-            <li className="nav-item">
-              <Link
-                className={`nav-link ${isActive("/tickets")}`}
-                to="/tickets"
-                style={isActive("/tickets") ? activeLinkStyle : linkStyle}
-              >
-                Tickets
-              </Link>
-            </li>
-            <li className="nav-item">
-              <Link
-                className={`nav-link ${isActive("/aboutUs")}`}
-                to="/aboutUs"
-                style={isActive("/aboutUs") ? activeLinkStyle : linkStyle}
-              >
-                About Us
-              </Link>
-            </li>
-            <li className="nav-item">
-              <Link
-                className={`nav-link ${isActive("/contactUs")}`}
-                to="/contactUs"
-                style={isActive("/contactUs") ? activeLinkStyle : linkStyle}
-              >
-                Contact Us
-              </Link>
-            </li>
-          </ul>
-          <div className="d-flex">
-            {user ? (
-              <div className="dropdown">
-                <button
-                  className="btn btn-outline-primary dropdown-toggle"
-                  type="button"
-                  data-bs-toggle="dropdown"
-                  aria-expanded="false"
-                  style={{ ...buttonStyle, minWidth: "150px" }}
-                >
-                  Welcome, {user.username}!
-                </button>
-                <ul className="dropdown-menu dropdown-menu-end">
-                  <li>
-                    <Link to="/profile" className="dropdown-item">
-                      Profile
-                    </Link>
-                  </li>
-                  <li>
-                    <button className="dropdown-item text-danger" onClick={handleLogout}>
-                      Logout
-                    </button>
-                  </li>
-                </ul>
-              </div>
-            ) : (
-              <>
-                <Link to="/login" className="btn btn-outline-primary me-2" style={buttonStyle}>
-                  Login
-                </Link>
-                <Link to="/register" className="btn btn-primary" style={buttonStyle}>
-                  Register
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-    </nav>
+              <Box sx={{ flexShrink: 0 }}>
+                {user ? (
+                  <>
+                    <Button
+                      onClick={handleProfileMenuOpen}
+                      sx={{
+                        textTransform: 'none',
+                        minWidth: 150,
+                        borderRadius: '20px',
+                      }}
+                      variant='outlined'>
+                      Welcome, {user.username}!
+                    </Button>
+                    <Menu
+                      anchorEl={anchorEl}
+                      open={Boolean(anchorEl)}
+                      onClose={handleProfileMenuClose}
+                      anchorOrigin={{
+                        vertical: 'bottom',
+                        horizontal: 'right',
+                      }}
+                      transformOrigin={{
+                        vertical: 'top',
+                        horizontal: 'right',
+                      }}>
+                      <MenuItem
+                        component={Link}
+                        to='/profile'
+                        onClick={handleProfileMenuClose}>
+                        Profile
+                      </MenuItem>
+                      <MenuItem
+                        onClick={handleLogout}
+                        sx={{ color: 'error.main' }}>
+                        Logout
+                      </MenuItem>
+                    </Menu>
+                  </>
+                ) : (
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Button
+                      component={Link}
+                      to='/login'
+                      variant='outlined'
+                      sx={{
+                        borderRadius: '20px',
+                      }}>
+                      Login
+                    </Button>
+                    <Button
+                      component={Link}
+                      to='/register'
+                      variant='contained'
+                      sx={{
+                        borderRadius: '20px',
+                      }}>
+                      Register
+                    </Button>
+                  </Box>
+                )}
+              </Box>
+            </>
+          )}
+        </Toolbar>
+      </Container>
+      {renderMobileMenu}
+    </AppBar>
   );
 };
 

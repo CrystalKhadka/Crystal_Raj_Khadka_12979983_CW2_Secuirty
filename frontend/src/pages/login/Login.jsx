@@ -1,376 +1,551 @@
-// <----------------------------------------------------------------------->
-
-import React, { useState } from "react";
+import {
+  Email as EmailIcon,
+  LocalMovies as LocalMoviesIcon,
+  Lock as LockIcon,
+  Phone as PhoneIcon,
+  Visibility as VisibilityIcon,
+  VisibilityOff as VisibilityOffIcon,
+  WavingHand as WavingHandIcon,
+} from '@mui/icons-material';
+import {
+  alpha,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Fade,
+  IconButton,
+  InputAdornment,
+  TextField,
+  Typography,
+  useTheme,
+} from '@mui/material';
+import React, { useState } from 'react';
+import { toast } from 'react-toastify';
 
 import {
+  forgotPasswordApi,
   loginUserApi,
   resetPasswordApi,
-  forgotPasswordApi,
-  getUserByGoogleEmail,
-  loginWithGoogle,
-} from "../../apis/Api";
-
-import { toast } from "react-toastify";
-
-import "./Login.css";
-
-import {
-  MdEmail,
-  MdLock,
-  MdVisibility,
-  MdVisibilityOff,
-  MdPhone,
-  MdLocalMovies,
-} from "react-icons/md";
-
-import { FaGoogle } from "react-icons/fa";
-
-import { Modal, Button, Form, InputGroup } from "react-bootstrap";
-import { GoogleLogin } from "@react-oauth/google";
+} from '../../apis/Api';
 
 const Login = () => {
-  const [email, setEmail] = useState("");
-
-  const [password, setPassword] = useState("");
-
-  const [phoneNumber, setPhoneNumber] = useState("");
-
-  const [otp, setOtp] = useState("");
-
-  const [resetPassword, setResetPassword] = useState("");
-
-  const [confirmPassword, setConfirmPassword] = useState("");
-
-  const [emailError, setEmailError] = useState("");
-
-  const [passwordError, setPasswordError] = useState("");
-
+  const theme = useTheme();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [otp, setOtp] = useState('');
+  const [resetPassword, setResetPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-
   const [isSentOtp, setIsSentOtp] = useState(false);
-
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
-
-  const handleEmail = (e) => setEmail(e.target.value);
-
-  const handlePassword = (e) => setPassword(e.target.value);
-
-  const togglePasswordVisibility = () => setShowPassword(!showPassword);
+  const [isLoading, setIsLoading] = useState(false);
 
   const validate = () => {
     let isValid = true;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    if (email.trim() === "") {
-      setEmailError("Email is required!");
-
+    if (!email.trim()) {
+      setEmailError('Email is required');
+      isValid = false;
+    } else if (!emailRegex.test(email)) {
+      setEmailError('Please enter a valid email');
       isValid = false;
     } else {
-      setEmailError("");
+      setEmailError('');
     }
 
-    if (password.trim() === "") {
-      setPasswordError("Password is required!");
-
+    if (!password.trim()) {
+      setPasswordError('Password is required');
       isValid = false;
     } else {
-      setPasswordError("");
+      setPasswordError('');
     }
-
     return isValid;
   };
 
-  const handleReset = (e) => {
+  const handleReset = async (e) => {
     e.preventDefault();
-
     if (resetPassword !== confirmPassword) {
-      toast.warning("Passwords do not match");
+      toast.warning('Passwords do not match');
       return;
     }
 
-    resetPasswordApi({ phoneNumber, otp, password: resetPassword })
-      .then(() => {
-        toast.success("Password reset successfully");
-
-        setPhoneNumber("");
-
-        setOtp("");
-
-        setResetPassword("");
-
-        setConfirmPassword("");
-
-        setIsSentOtp(false);
-
-        setShowForgotPasswordModal(false);
-      })
-
-      .catch((err) =>
-        toast.error(err.response?.data?.message || "Reset failed")
-      );
+    setIsLoading(true);
+    try {
+      await resetPasswordApi({ phoneNumber, otp, password: resetPassword });
+      toast.success('Password reset successfully');
+      setPhoneNumber('');
+      setOtp('');
+      setResetPassword('');
+      setConfirmPassword('');
+      setIsSentOtp(false);
+      setShowForgotPasswordModal(false);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Reset failed');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const sentOtp = (e) => {
+  const sentOtp = async (e) => {
     e.preventDefault();
-
-    if (phoneNumber.trim() === "") {
-      toast.warning("Please enter phone number");
-
+    if (!phoneNumber.trim()) {
+      toast.warning('Please enter phone number');
       return;
     }
 
-    forgotPasswordApi({ phoneNumber })
-      .then((res) => {
-        toast.success(res.data.message);
-
-        setIsSentOtp(true);
-      })
-
-      .catch((err) =>
-        toast.error(err.response?.data?.message || "OTP send failed")
-      );
+    setIsLoading(true);
+    try {
+      const res = await forgotPasswordApi({ phoneNumber });
+      toast.success(res.data.message);
+      setIsSentOtp(true);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'OTP send failed');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!validate()) return;
 
-    loginUserApi({ email, password })
-      .then((res) => {
-        if (res.data.success === false) {
-          toast.error(res.data.message);
-        } else {
-          toast.success(res.data.message);
+    setIsLoading(true);
+    try {
+      const res = await loginUserApi({ email, password });
+      if (!res.data.success) {
+        toast.error(res.data.message);
+      } else {
+        toast.success(res.data.message);
+        localStorage.setItem('token', res.data.token);
+        localStorage.setItem('user', JSON.stringify(res.data.userData));
+        window.location.href = res.data.userData.isAdmin
+          ? '/admin/dashboard'
+          : '/Homepage';
+      }
+    } catch (err) {
+      toast.error('Login failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-          localStorage.setItem("token", res.data.token);
-
-          localStorage.setItem("user", JSON.stringify(res.data.userData));
-
-          window.location.href = res.data.userData.isAdmin
-            ? "/admin/dashboard"
-            : "/Homepage";
-        }
-      })
-
-      .catch(() => toast.error("Login failed"));
+  const textFieldProps = {
+    fullWidth: true,
+    variant: 'outlined',
+    sx: {
+      '& .MuiOutlinedInput-root': {
+        '&:hover fieldset': {
+          borderColor: theme.palette.primary.main,
+        },
+        '&.Mui-focused fieldset': {
+          borderWidth: '2px',
+        },
+      },
+      '& .MuiInputLabel-root': {
+        '&.Mui-focused': {
+          color: theme.palette.primary.main,
+        },
+      },
+    },
   };
 
   return (
-    <div className="auth-container movie-themed">
-      <div className="auth-card">
-        <div className="movie-reel-animation">
-          <MdLocalMovies className="movie-icon" />
-        </div>
-        <h1 className="auth-header">Login to your account</h1>
-        <p className="auth-subheader">
-          Your ticket to cinematic adventures awaits
-        </p>
-        <form className="auth-form" onSubmit={handleSubmit}>
-          <InputGroup className="mb-3 movie-input ">
-            <InputGroup.Text>
-              <MdEmail />
-            </InputGroup.Text>
-            <Form.Control
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={handleEmail}
-              isInvalid={!!emailError}
-            />
-            <Form.Control.Feedback type="invalid">
-              {emailError}
-            </Form.Control.Feedback>
-          </InputGroup>
-          <InputGroup className="mb-3 movie-input">
-            <InputGroup.Text>
-              <MdLock />
-            </InputGroup.Text>
-            <Form.Control
-              type={showPassword ? "text" : "password"}
-              placeholder="Enter your password"
-              value={password}
-              onChange={handlePassword}
-              isInvalid={!!passwordError}
-            />
-            <Button
-              variant="outline-secondary"
-              onClick={togglePasswordVisibility}
-            >
-              {showPassword ? <MdVisibilityOff /> : <MdVisibility />}
-            </Button>
-            <Form.Control.Feedback type="invalid">
-              {passwordError}
-            </Form.Control.Feedback>
-          </InputGroup>
-          <div className="d-flex justify-content-end mb-3">
-            <Button
-              variant="link"
-              className="forgot-password-link"
-              onClick={() => setShowForgotPasswordModal(true)}
-            >
-              Forgot Password?
-            </Button>
-          </div>
-          <Button
-            variant="primary"
-            type="submit"
-            className="w-100 mb-3 login-button"
-          >
-            Login
-          </Button>
-          <div className="text-center mb-3">
-            <span className="text-muted">Or login with</span>
-          </div>
-          <div align="center" className="mb-3">
-            <GoogleLogin
-              onSuccess={(credentialResponse) => {
-                console.log(credentialResponse);
+    <Container
+      component='main'
+      maxWidth='xs'
+      sx={{
+        mt: 10,
+      }}>
+      <Fade
+        in
+        timeout={800}>
+        <Box
+          sx={{
+            marginTop: 8,
+            marginBottom: 8,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+          }}>
+          <Card
+            elevation={6}
+            sx={{
+              width: '100%',
+              background: `linear-gradient(145deg, ${
+                theme.palette.background.paper
+              } 0%, ${alpha(theme.palette.background.paper, 0.8)} 100%)`,
+              backdropFilter: 'blur(10px)',
+              borderRadius: 3,
+              border: `1px solid ${theme.palette.divider}`,
+            }}>
+            <CardContent sx={{ p: 4 }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: 1,
+                  mb: 4,
+                }}>
+                <LocalMoviesIcon
+                  sx={{
+                    fontSize: 40,
+                    color: theme.palette.primary.main,
+                    filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
+                  }}
+                />
+                <WavingHandIcon
+                  sx={{
+                    fontSize: 28,
+                    color: theme.palette.primary.main,
+                    animation: 'wave 1.5s infinite',
+                    '@keyframes wave': {
+                      '0%': { transform: 'rotate(-10deg)' },
+                      '50%': { transform: 'rotate(20deg)' },
+                      '100%': { transform: 'rotate(-10deg)' },
+                    },
+                  }}
+                />
+              </Box>
 
-                const credential = credentialResponse.credential;
+              <Typography
+                component='h1'
+                variant='h4'
+                align='center'
+                gutterBottom
+                sx={{
+                  fontWeight: 700,
+                  background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.primary.light})`,
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  color: 'transparent',
+                  mb: 1,
+                }}>
+                Welcome Back!
+              </Typography>
 
-                getUserByGoogleEmail({
-                  token: credential,
-                })
-                  .then((res) => {
-                    if (res.data.success === false) {
-                      toast.error(res.data.message);
-                    } else {
-                      toast.success(res.data.message);
-                      loginWithGoogle({
-                        token: credential,
-                      })
-                        .then((res) => {
-                          if (res.data.success === false) {
-                            toast.error(res.data.message);
-                          } else {
-                            toast.success(res.data.message);
-                            localStorage.setItem("token", res.data.token);
-                            localStorage.setItem(
-                              "user",
-                              JSON.stringify(res.data.user)
-                            );
-                            window.location.href = "/Homepage";
-                          }
-                        })
-                        .catch((err) => {
-                          console.log(err);
-                        });
-                    }
-                  })
-                  .catch((err) => {
-                    loginWithGoogle({
-                      token: credential,
-                      password: "12345678",
-                    })
-                      .then((res) => {
-                        if (res.data.success === false) {
-                          toast.error(res.data.message);
-                        } else {
-                          toast.success(res.data.message);
-                          localStorage.setItem("token", res.data.token);
-                          localStorage.setItem(
-                            "user",
-                            JSON.stringify(res.data.user)
-                          );
-                          window.location.href = "/Homepage";
-                        }
-                      })
-                      .catch((err) => {
-                        console.log(err);
-                      });
-                  });
-              }}
-              onError={() => {
-                console.log("Login Failed");
-              }}
-            />
-          </div>
+              <Typography
+                variant='body1'
+                color='text.secondary'
+                align='center'
+                sx={{ mb: 4 }}>
+                Your ticket to cinematic adventures awaits
+              </Typography>
 
-          <div className="text-center">
-            <span className="text-muted">Don't have an account? </span>
-            <a href="/register" className="register-now-link">
-              Create one
-            </a>
-          </div>
-        </form>
-      </div>
-
-      <Modal
-        show={showForgotPasswordModal}
-        onHide={() => setShowForgotPasswordModal(false)}
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>Reset Password</Modal.Title>
-        </Modal.Header>
-
-        <Modal.Body>
-          <Form>
-            <Form.Group className="mb-3">
-              <Form.Label>Phone Number</Form.Label>
-
-              <InputGroup>
-                <Form.Control
-                  type="tel"
-                  placeholder="Enter your phone number"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  disabled={isSentOtp}
+              <Box
+                component='form'
+                onSubmit={handleSubmit}
+                noValidate>
+                <TextField
+                  {...textFieldProps}
+                  margin='normal'
+                  required
+                  id='email'
+                  label='Email Address'
+                  name='email'
+                  autoComplete='email'
+                  autoFocus
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  error={!!emailError}
+                  helperText={emailError}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position='start'>
+                        <EmailIcon color={emailError ? 'error' : 'primary'} />
+                      </InputAdornment>
+                    ),
+                  }}
                 />
 
+                <TextField
+                  {...textFieldProps}
+                  margin='normal'
+                  required
+                  name='password'
+                  label='Password'
+                  type={showPassword ? 'text' : 'password'}
+                  id='password'
+                  autoComplete='current-password'
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  error={!!passwordError}
+                  helperText={passwordError}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position='start'>
+                        <LockIcon color={passwordError ? 'error' : 'primary'} />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position='end'>
+                        <IconButton
+                          aria-label='toggle password visibility'
+                          onClick={() => setShowPassword(!showPassword)}
+                          edge='end'
+                          size='large'>
+                          {showPassword ? (
+                            <VisibilityOffIcon />
+                          ) : (
+                            <VisibilityIcon />
+                          )}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+
+                <Box
+                  sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+                  <Button
+                    onClick={() => setShowForgotPasswordModal(true)}
+                    sx={{
+                      textTransform: 'none',
+                      '&:hover': {
+                        background: 'transparent',
+                        color: theme.palette.primary.main,
+                      },
+                    }}>
+                    Forgot Password?
+                  </Button>
+                </Box>
+
                 <Button
-                  variant="outline-primary"
-                  onClick={sentOtp}
-                  disabled={isSentOtp}
-                >
-                  Get OTP
+                  type='submit'
+                  fullWidth
+                  variant='contained'
+                  disabled={isLoading}
+                  sx={{
+                    mt: 3,
+                    mb: 2,
+                    py: 1.5,
+                    fontSize: '1.1rem',
+                    fontWeight: 600,
+                    textTransform: 'none',
+                    borderRadius: 2,
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                    '&:hover': {
+                      boxShadow: '0 6px 16px rgba(0,0,0,0.2)',
+                      transform: 'translateY(-1px)',
+                    },
+                    transition: 'all 0.2s ease-in-out',
+                  }}>
+                  {isLoading ? 'Logging in...' : 'Login'}
                 </Button>
-              </InputGroup>
-            </Form.Group>
 
-            {isSentOtp && (
+                <Box
+                  sx={{
+                    textAlign: 'center',
+                    p: 2,
+                    borderRadius: 2,
+                    bgcolor: theme.palette.background.default,
+                  }}>
+                  <Typography
+                    variant='body2'
+                    color='text.secondary'
+                    display='inline'>
+                    Don't have an account?{' '}
+                  </Typography>
+                  <Button
+                    href='/register'
+                    sx={{
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      '&:hover': {
+                        background: 'transparent',
+                        color: theme.palette.primary.main,
+                      },
+                    }}>
+                    Create one
+                  </Button>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Box>
+      </Fade>
+
+      <Dialog
+        open={showForgotPasswordModal}
+        onClose={() => {
+          if (!isLoading) {
+            setShowForgotPasswordModal(false);
+            setIsSentOtp(false);
+            setPhoneNumber('');
+            setOtp('');
+            setResetPassword('');
+            setConfirmPassword('');
+          }
+        }}
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            width: '100%',
+            maxWidth: 400,
+          },
+        }}>
+        <DialogTitle
+          sx={{
+            pb: 1,
+            textAlign: 'center',
+            fontWeight: 600,
+          }}>
+          Reset Password
+        </DialogTitle>
+        <DialogContent>
+          <Box
+            component='form'
+            noValidate
+            sx={{ mt: 1 }}>
+            <TextField
+              {...textFieldProps}
+              margin='normal'
+              required
+              fullWidth
+              id='phone'
+              label='Phone Number'
+              name='phone'
+              autoComplete='tel'
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              disabled={isSentOtp}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position='start'>
+                    <PhoneIcon color={isSentOtp ? 'disabled' : 'primary'} />
+                  </InputAdornment>
+                ),
+              }}
+            />
+
+            {!isSentOtp ? (
+              <Button
+                fullWidth
+                variant='contained'
+                onClick={sentOtp}
+                disabled={isLoading}
+                sx={{
+                  mt: 3,
+                  py: 1.2,
+                  textTransform: 'none',
+                  borderRadius: 2,
+                  fontWeight: 600,
+                }}>
+                {isLoading ? 'Sending OTP...' : 'Get OTP'}
+              </Button>
+            ) : (
               <>
-                <Form.Group className="mb-3">
-                  <Form.Label>OTP</Form.Label>
+                <TextField
+                  {...textFieldProps}
+                  margin='normal'
+                  required
+                  fullWidth
+                  id='otp'
+                  label='OTP'
+                  name='otp'
+                  type='number'
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  sx={{
+                    '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button':
+                      {
+                        '-webkit-appearance': 'none',
+                        margin: 0,
+                      },
+                    '& input[type=number]': {
+                      '-moz-appearance': 'textfield',
+                    },
+                  }}
+                />
 
-                  <Form.Control
-                    type="number"
-                    placeholder="Enter OTP"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                  />
-                </Form.Group>
+                <TextField
+                  {...textFieldProps}
+                  margin='normal'
+                  required
+                  fullWidth
+                  name='newPassword'
+                  label='New Password'
+                  type='password'
+                  id='newPassword'
+                  value={resetPassword}
+                  onChange={(e) => setResetPassword(e.target.value)}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position='start'>
+                        <LockIcon color='primary' />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
 
-                <Form.Group className="mb-3">
-                  <Form.Label>New Password</Form.Label>
-
-                  <Form.Control
-                    type="password"
-                    placeholder="Enter new password"
-                    value={resetPassword}
-                    onChange={(e) => setResetPassword(e.target.value)}
-                  />
-                </Form.Group>
-
-                <Form.Group className="mb-3">
-                  <Form.Label>Confirm Password</Form.Label>
-
-                  <Form.Control
-                    type="password"
-                    placeholder="Confirm new password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                  />
-                </Form.Group>
-
-                <Button variant="primary" onClick={handleReset}>
-                  Reset Password
-                </Button>
+                <TextField
+                  {...textFieldProps}
+                  margin='normal'
+                  required
+                  fullWidth
+                  name='confirmPassword'
+                  label='Confirm Password'
+                  type='password'
+                  id='confirmPassword'
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position='start'>
+                        <LockIcon color='primary' />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
               </>
             )}
-          </Form>
-        </Modal.Body>
-      </Modal>
-    </div>
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button
+            onClick={() => {
+              if (!isLoading) {
+                setShowForgotPasswordModal(false);
+                setIsSentOtp(false);
+                setPhoneNumber('');
+                setOtp('');
+                setResetPassword('');
+                setConfirmPassword('');
+              }
+            }}
+            sx={{
+              textTransform: 'none',
+              fontWeight: 500,
+              minWidth: 100,
+            }}>
+            Cancel
+          </Button>
+          {isSentOtp && (
+            <Button
+              onClick={handleReset}
+              variant='contained'
+              disabled={isLoading}
+              sx={{
+                textTransform: 'none',
+                fontWeight: 600,
+                minWidth: 100,
+              }}>
+              {isLoading ? 'Resetting...' : 'Reset Password'}
+            </Button>
+          )}
+        </DialogActions>
+      </Dialog>
+    </Container>
   );
 };
 

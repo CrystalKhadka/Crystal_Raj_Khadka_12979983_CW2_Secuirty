@@ -1,212 +1,415 @@
-import React, { useState } from "react";
-import { registerUserApi } from "../../apis/Api";
-import { toast } from "react-toastify";
-import { Link } from "react-router-dom";
-import "./Register.css";
 import {
-  MdPerson,
-  MdEmail,
-  MdLock,
-  MdVisibility,
-  MdVisibilityOff,
-  MdPhone,
-  MdLocalMovies,
-  MdTheaters,
-} from "react-icons/md";
+  Email,
+  LocalMovies,
+  Lock,
+  Person,
+  Phone,
+  Theaters,
+  Visibility,
+  VisibilityOff,
+} from '@mui/icons-material';
+import {
+  Box,
+  Button,
+  Container,
+  Divider,
+  Fade,
+  Grow,
+  IconButton,
+  InputAdornment,
+  Paper,
+  Stack,
+  TextField,
+  Typography,
+  useTheme,
+} from '@mui/material';
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { registerUserApi } from '../../apis/Api';
 
 const Register = () => {
-  const [username, setUsername] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const theme = useTheme();
 
-  const [usernameError, setUsernameError] = useState("");
-  const [phoneNumberError, setPhoneNumberError] = useState("");
-  const [emailError, setEmailError] = useState("");
-  const [passwordError, setPasswordError] = useState("");
-  const [confirmPasswordError, setConfirmPasswordError] = useState("");
+  const [formData, setFormData] = useState({
+    username: '',
+    phoneNumber: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  });
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [errors, setErrors] = useState({
+    username: '',
+    phoneNumber: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  });
 
-  const handleUsername = (e) => setUsername(e.target.value);
-  const handlePhoneNumber = (e) => setPhoneNumber(e.target.value);
-  const handleEmail = (e) => setEmail(e.target.value);
-  const handlePassword = (e) => setPassword(e.target.value);
-  const handleConfirmPassword = (e) => setConfirmPassword(e.target.value);
+  const [showPassword, setShowPassword] = useState({
+    password: false,
+    confirmPassword: false,
+  });
 
-  const togglePasswordVisibility = () => setShowPassword(!showPassword);
-  const toggleConfirmPasswordVisibility = () =>
-    setShowConfirmPassword(!showConfirmPassword);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleChange = (field) => (event) => {
+    setFormData({ ...formData, [field]: event.target.value });
+    setErrors({ ...errors, [field]: '' });
+  };
+
+  const togglePasswordVisibility = (field) => () => {
+    setShowPassword({
+      ...showPassword,
+      [field]: !showPassword[field],
+    });
+  };
 
   const validate = () => {
     let isValid = true;
+    const newErrors = { ...errors };
 
-    if (username.trim() === "") {
-      setUsernameError("Username is required!");
+    // Enhanced validation rules
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^\+?[\d\s-]{10,}$/;
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+
+    if (!formData.username || formData.username.length < 3) {
+      newErrors.username = 'Username must be at least 3 characters long';
       isValid = false;
-    } else {
-      setUsernameError("");
     }
 
-    if (phoneNumber.trim() === "") {
-      setPhoneNumberError("Phone Number is required!");
+    if (!phoneRegex.test(formData.phoneNumber)) {
+      newErrors.phoneNumber = 'Please enter a valid phone number';
       isValid = false;
-    } else {
-      setPhoneNumberError("");
     }
 
-    if (email.trim() === "") {
-      setEmailError("Email is required!");
+    if (!emailRegex.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email address';
       isValid = false;
-    } else {
-      setEmailError("");
     }
 
-    if (password.trim() === "") {
-      setPasswordError("Password is required!");
+    if (!passwordRegex.test(formData.password)) {
+      newErrors.password =
+        'Password must be at least 8 characters with letters and numbers';
       isValid = false;
-    } else {
-      setPasswordError("");
     }
 
-    if (confirmPassword.trim() === "") {
-      setConfirmPasswordError("Confirm Password is required!");
+    if (formData.confirmPassword !== formData.password) {
+      newErrors.confirmPassword = "Passwords don't match";
       isValid = false;
-    } else if (confirmPassword.trim() !== password.trim()) {
-      setConfirmPasswordError("Passwords don't match!");
-      isValid = false;
-    } else {
-      setConfirmPasswordError("");
     }
 
+    setErrors(newErrors);
     return isValid;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!validate()) return;
 
-    const data = { username, phoneNumber, email, password };
+    setIsLoading(true);
+    const data = {
+      username: formData.username,
+      phoneNumber: formData.phoneNumber,
+      email: formData.email,
+      password: formData.password,
+    };
 
-    registerUserApi(data)
-      .then((res) => {
-        toast.success(res.data.message);
-      })
-      .catch((err) => {
-        if (err.response) {
-          toast.warning(err.response.data.message);
-        } else {
-          toast.error("Something went wrong");
-        }
-      });
+    try {
+      const res = await registerUserApi(data);
+      toast.success(res.data.message);
+    } catch (err) {
+      if (err.response) {
+        toast.warning(err.response.data.message);
+      } else {
+        toast.error('Something went wrong');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const textFieldProps = {
+    fullWidth: true,
+    variant: 'outlined',
+    margin: 'normal',
+    size: 'medium',
+    sx: {
+      '& .MuiOutlinedInput-root': {
+        '&:hover fieldset': {
+          borderColor: theme.palette.primary.main,
+        },
+        '&.Mui-focused fieldset': {
+          borderWidth: '2px',
+        },
+      },
+      '& .MuiInputLabel-root': {
+        '&.Mui-focused': {
+          color: theme.palette.primary.main,
+        },
+      },
+    },
   };
 
   return (
-    <div className="auth-container movie-themed">
-      <div className="auth-card">
-        <div className="movie-reel-animation">
-          <MdLocalMovies className="movie-icon" />
-          <MdTheaters className="movie-icon" />
-        </div>
-        <h1 className="auth-header">Create an account</h1>
-        <p className="auth-subheader">
-          Your ticket to cinematic adventures awaits{" "}
-        </p>
-        <form className="auth-form" onSubmit={handleSubmit}>
-          <div className="form-group movie-input">
-            <MdPerson />
-            <input
-              onChange={handleUsername}
-              type="text"
-              className="form-control"
-              placeholder="Enter your username"
-            />
-            {usernameError && <p className="text-danger">{usernameError}</p>}
-          </div>
+    <Container
+      maxWidth='sm'
+      sx={{ mt: 10, mb: 8 }}>
+      <Grow
+        in
+        timeout={800}>
+        <Paper
+          elevation={6}
+          sx={{
+            p: { xs: 2, sm: 4 },
+            borderRadius: 3,
+            background: `linear-gradient(145deg, ${theme.palette.background.paper} 0%, ${theme.palette.background.default} 100%)`,
+            backdropFilter: 'blur(10px)',
+            border: `1px solid ${theme.palette.divider}`,
+          }}>
+          <Fade
+            in
+            timeout={1200}>
+            <Box>
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  gap: 2,
+                  mb: 3,
+                  transform: 'scale(1.2)',
+                }}>
+                <LocalMovies
+                  sx={{
+                    fontSize: 40,
+                    color: theme.palette.primary.main,
+                    filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
+                  }}
+                />
+                <Theaters
+                  sx={{
+                    fontSize: 40,
+                    color: theme.palette.primary.main,
+                    filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
+                  }}
+                />
+              </Box>
 
-          <div className="form-group movie-input">
-            <MdPhone />
-            <input
-              onChange={handlePhoneNumber}
-              type="text"
-              className="form-control"
-              placeholder="Enter your phone number"
-            />
-            {phoneNumberError && (
-              <p className="text-danger">{phoneNumberError}</p>
-            )}
-          </div>
+              <Typography
+                variant='h4'
+                component='h1'
+                align='center'
+                gutterBottom
+                sx={{
+                  fontWeight: 700,
+                  background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.primary.light})`,
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  color: 'transparent',
+                  textShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                  mb: 1,
+                }}>
+                Create an account
+              </Typography>
 
-          <div className="form-group movie-input">
-            <MdEmail />
-            <input
-              onChange={handleEmail}
-              type="email"
-              className="form-control"
-              placeholder="Enter your email"
-            />
-            {emailError && <p className="text-danger">{emailError}</p>}
-          </div>
+              <Typography
+                variant='body1'
+                align='center'
+                color='text.secondary'
+                sx={{ mb: 4, maxWidth: '80%', mx: 'auto' }}>
+                Your ticket to cinematic adventures awaits
+              </Typography>
 
-          <div className="form-group movie-input">
-            <MdLock />
-            <div className="input-group">
-              
-              <input
-                onChange={handlePassword}
-                type={showPassword ? "text" : "password"}
-                className="form-control"
-                placeholder="Enter your password"
-              />
-              <button
-                type="button"
-                className="btn btn-outline-secondary password-toggle"
-                onClick={togglePasswordVisibility}
-              >
-                {showPassword ? <MdVisibilityOff /> : <MdVisibility />}
-              </button>
-            </div>
-            {passwordError && <p className="text-danger">{passwordError}</p>}
-          </div>
+              <Divider sx={{ mb: 4 }} />
 
-          <div className="form-group movie-input">
-            <MdLock />
-            <div className="input-group">
-              <input
-                onChange={handleConfirmPassword}
-                type={showConfirmPassword ? "text" : "password"}
-                className="form-control"
-                placeholder="Confirm your password"
-              />
-              <button
-                type="button"
-                className="btn btn-outline-secondary password-toggle"
-                onClick={toggleConfirmPasswordVisibility}
-              >
-                {showConfirmPassword ? <MdVisibilityOff /> : <MdVisibility />}
-              </button>
-            </div>
-            {confirmPasswordError && (
-              <p className="text-danger">{confirmPasswordError}</p>
-            )}
-          </div>
+              <form onSubmit={handleSubmit}>
+                <Stack spacing={2.5}>
+                  {/* Form fields remain the same but with enhanced textFieldProps */}
+                  <TextField
+                    {...textFieldProps}
+                    label='Username'
+                    error={!!errors.username}
+                    helperText={errors.username}
+                    value={formData.username}
+                    onChange={handleChange('username')}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position='start'>
+                          <Person
+                            color={errors.username ? 'error' : 'primary'}
+                          />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
 
-          <button type="submit" className="btn btn-primary w-100 login-button">
-            Register
-          </button>
+                  <TextField
+                    {...textFieldProps}
+                    label='Phone Number'
+                    error={!!errors.phoneNumber}
+                    helperText={errors.phoneNumber}
+                    value={formData.phoneNumber}
+                    onChange={handleChange('phoneNumber')}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position='start'>
+                          <Phone
+                            color={errors.phoneNumber ? 'error' : 'primary'}
+                          />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
 
-          <div className="text-center mt-3">
-            <span className="text-muted">Already have a ticket? </span>
-            <Link to="/login" className="register-now-link">
-              Login Now
-            </Link>
-          </div>
-        </form>
-      </div>
-    </div>
+                  <TextField
+                    {...textFieldProps}
+                    label='Email'
+                    type='email'
+                    error={!!errors.email}
+                    helperText={errors.email}
+                    value={formData.email}
+                    onChange={handleChange('email')}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position='start'>
+                          <Email color={errors.email ? 'error' : 'primary'} />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+
+                  <TextField
+                    {...textFieldProps}
+                    label='Password'
+                    type={showPassword.password ? 'text' : 'password'}
+                    error={!!errors.password}
+                    helperText={errors.password}
+                    value={formData.password}
+                    onChange={handleChange('password')}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position='start'>
+                          <Lock color={errors.password ? 'error' : 'primary'} />
+                        </InputAdornment>
+                      ),
+                      endAdornment: (
+                        <InputAdornment position='end'>
+                          <IconButton
+                            onClick={togglePasswordVisibility('password')}
+                            edge='end'
+                            size='large'>
+                            {showPassword.password ? (
+                              <VisibilityOff />
+                            ) : (
+                              <Visibility />
+                            )}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+
+                  <TextField
+                    {...textFieldProps}
+                    label='Confirm Password'
+                    type={showPassword.confirmPassword ? 'text' : 'password'}
+                    error={!!errors.confirmPassword}
+                    helperText={errors.confirmPassword}
+                    value={formData.confirmPassword}
+                    onChange={handleChange('confirmPassword')}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position='start'>
+                          <Lock
+                            color={errors.confirmPassword ? 'error' : 'primary'}
+                          />
+                        </InputAdornment>
+                      ),
+                      endAdornment: (
+                        <InputAdornment position='end'>
+                          <IconButton
+                            onClick={togglePasswordVisibility(
+                              'confirmPassword'
+                            )}
+                            edge='end'
+                            size='large'>
+                            {showPassword.confirmPassword ? (
+                              <VisibilityOff />
+                            ) : (
+                              <Visibility />
+                            )}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+
+                  <Button
+                    type='submit'
+                    variant='contained'
+                    size='large'
+                    fullWidth
+                    disabled={isLoading}
+                    sx={{
+                      mt: 4,
+                      mb: 2,
+                      py: 1.5,
+                      fontSize: '1.1rem',
+                      fontWeight: 600,
+                      textTransform: 'none',
+                      borderRadius: 2,
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                      '&:hover': {
+                        boxShadow: '0 6px 16px rgba(0,0,0,0.2)',
+                        transform: 'translateY(-1px)',
+                      },
+                      transition: 'all 0.2s ease-in-out',
+                    }}>
+                    {isLoading ? 'Creating Account...' : 'Register'}
+                  </Button>
+
+                  <Box
+                    sx={{
+                      textAlign: 'center',
+                      mt: 2,
+                      p: 2,
+                      borderRadius: 2,
+                      backgroundColor: theme.palette.background.default,
+                    }}>
+                    <Typography
+                      variant='body2'
+                      color='text.secondary'
+                      component='span'>
+                      Already have a ticket?{' '}
+                    </Typography>
+                    <Link
+                      to='/login'
+                      style={{
+                        textDecoration: 'none',
+                      }}>
+                      <Typography
+                        variant='body2'
+                        component='span'
+                        color='primary'
+                        sx={{
+                          fontWeight: 600,
+                          '&:hover': {
+                            textDecoration: 'underline',
+                          },
+                        }}>
+                        Login Now
+                      </Typography>
+                    </Link>
+                  </Box>
+                </Stack>
+              </form>
+            </Box>
+          </Fade>
+        </Paper>
+      </Grow>
+    </Container>
   );
 };
 
