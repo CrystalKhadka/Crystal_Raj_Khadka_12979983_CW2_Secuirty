@@ -1,39 +1,39 @@
-import axios from "axios";
+import axios from 'axios';
 
 // Creating backend config
 const Api = axios.create({
-  baseURL: "http://localhost:5000",
+  baseURL: 'https://localhost:5000',
   withCredentials: true,
   headers: {
-    "Content-Type": "multipart/form-data",
+    'Content-Type': 'multipart/form-data',
   },
 });
 
 const config = {
   headers: {
-    authorization: `Bearer ${localStorage.getItem("token")}`,
+    authorization: `Bearer ${localStorage.getItem('token')}`,
   },
 };
 
 const jsonConfig = {
   headers: {
-    authorization: `Bearer ${localStorage.getItem("token")}`,
-    "Content-Type": "application/json",
+    authorization: `Bearer ${localStorage.getItem('token')}`,
+    'Content-Type': 'application/json',
   },
 };
 
 // Register API
-export const registerUserApi = (data) => Api.post("/api/user/create", data);
+export const registerUserApi = (data) => Api.post('/api/user/create', data);
 
 // Login API
-export const loginUserApi = (data) => Api.post("/api/user/login", data);
+export const loginUserApi = (data) => Api.post('/api/user/login', data);
 
 // Create Movie API
-export const createMovieApi = (data) => Api.post("/api/movie/create", data);
+export const createMovieApi = (data) => Api.post('/api/movie/create', data);
 
 // Fetch all Movies API
 export const getAllMoviesApi = () =>
-  Api.get("/api/movie/get_all_movies", config);
+  Api.get('/api/movie/get_all_movies', config);
 
 // Fetch single Movie by ID API
 export const getSingleMovieApi = (id) =>
@@ -52,15 +52,15 @@ export const pagination = (page, limit) =>
   Api.get(`/api/movie/pagination/?page=${page}&limit=${limit}`, config);
 
 export const getMovieCount = () =>
-  Api.get("/api/movie/get_movies_count", config);
+  Api.get('/api/movie/get_movies_count', config);
 
 // Forgot password API
 export const forgotPasswordApi = (data) =>
-  Api.post("/api/user/forgot-password", data);
+  Api.post('/api/user/forgot-password', data);
 
 // Reset password API
 export const resetPasswordApi = (data) =>
-  Api.post("/api/user/reset-password", data);
+  Api.post('/api/user/reset-password', data);
 
 // Fetch single profile by ID API
 export const getSingleprofileApi = () =>
@@ -68,7 +68,7 @@ export const getSingleprofileApi = () =>
 
 // Fetch all profiles
 export const getAllProfileApi = () =>
-  Api.get("/api/user/get_all_users", config);
+  Api.get('/api/user/get_all_users', config);
 
 // Delete profile by ID API
 export const deleteProfileApi = (id) =>
@@ -84,10 +84,10 @@ export const buyTicketsApi = (id, data) =>
 
 // Add show api
 export const addShowsApi = (data) =>
-  Api.post("/api/shows/create", data, config);
+  Api.post('/api/shows/create', data, config);
 
 // Get All Shows
-export const getAllShowsApi = () => Api.get("/api/shows/get_all", config);
+export const getAllShowsApi = () => Api.get('/api/shows/get_all', config);
 
 // Get show by ID
 export const getShowByMovieIdApi = (id) =>
@@ -99,34 +99,39 @@ export const getSeatsByShowIdApi = (id) =>
 
 // Book tickets
 export const bookTicketsApi = (data) =>
-  Api.post("/api/booking/create", data, jsonConfig);
+  Api.post('/api/booking/create', data, jsonConfig);
 
 // get a ll bookings api
-export const getAllBookingsApi = (data) => Api.get("api/booking/get_all_bookings", data,config);
+export const getAllBookingsApi = (data) =>
+  Api.get('api/booking/get_all_bookings', data, config);
 
-export const getBookingsByUserApi = () => Api.get("api/booking/get_bookings_by_user"  ,config);
+export const getBookingsByUserApi = () =>
+  Api.get('api/booking/get_bookings_by_user', config);
 // Make seat unavailable
 export const makeSeatUnavailableApi = (data) =>
-  Api.put("/api/seat/setAvailable",data, jsonConfig );
+  Api.put('/api/seat/setAvailable', data, jsonConfig);
 
 // dashboard stats
 export const getDashboardStats = () =>
-  Api.get("/api/admin/dashboard_stats", config);
+  Api.get('/api/admin/dashboard_stats', config);
 
 // get ticket detail api
 
 // login with google
-export const loginWithGoogle = (data) => Api.post("/api/user/google_login",data, config);
+export const loginWithGoogle = (data) =>
+  Api.post('/api/user/google_login', data, config);
 
 //get user by google email
-export const getUserByGoogleEmail = (data) => Api.post("/api/user/get_user_by_google_email", data,config);
+export const getUserByGoogleEmail = (data) =>
+  Api.post('/api/user/get_user_by_google_email', data, config);
 
 // khalti
-export const initializeKhalti = (data) => Api.post("/api/payment/initialize_khalti", data, config);
+export const initializeKhalti = (data) =>
+  Api.post('/api/payment/initialize_khalti', data, config);
 
 // contact us API
-export const contactUs = (data) => Api.post("/api/contact/create", data, config);
+export const contactUs = (data) =>
+  Api.post('/api/contact/create', data, config);
 
 // get contact us message API
-export const getContactUs = () => Api.get("/api/contact/get_contact", config);
-
+export const getContactUs = () => Api.get('/api/contact/get_contact', config);

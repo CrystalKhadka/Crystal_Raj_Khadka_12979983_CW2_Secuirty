@@ -8,7 +8,7 @@
 //         {movieInformation.movieRated}
 //       </span>
 //       <img
-//         src={`http://localhost:5000/movies/${movieInformation.moviePosterImage}`}
+//         src={`https://localhost:5000/movies/${movieInformation.moviePosterImage}`}
 //         className="card-img-top"
 //         alt={movieInformation.movieName}
 //       />
@@ -31,28 +31,32 @@
 
 // export default MovieCard;
 
-import React from "react";
-import { Link } from "react-router-dom";
-import "./MovieCard.css"; // Make sure to create this CSS file in the same directory
+import React from 'react';
+import { Link } from 'react-router-dom';
+import './MovieCard.css'; // Make sure to create this CSS file in the same directory
 
 const MovieCard = ({ movieInformation, color }) => {
   return (
-    <div className="movie-card">
-      <div className="movie-poster">
+    <div className='movie-card'>
+      <div className='movie-poster'>
         <img
-          src={`http://localhost:5000/movies/${movieInformation.moviePosterImage}`}
+          src={`https://localhost:5000/movies/${movieInformation.moviePosterImage}`}
           alt={movieInformation.movieName}
         />
-        <span className="movie-rating" style={{ backgroundColor: color }}>
+        <span
+          className='movie-rating'
+          style={{ backgroundColor: color }}>
           {movieInformation.movieRated}
         </span>
       </div>
-      <div className="movie-info">
-        <h3 className="movie-title">{movieInformation.movieName}</h3>
-        <p className="movie-description">
+      <div className='movie-info'>
+        <h3 className='movie-title'>{movieInformation.movieName}</h3>
+        <p className='movie-description'>
           {movieInformation.movieDetails.slice(0, 80)}...
         </p>
-        <Link to={`/movie/buyTickets/${movieInformation._id}`} className="buy-tickets-btn">
+        <Link
+          to={`/movie/buyTickets/${movieInformation._id}`}
+          className='buy-tickets-btn'>
           Buy Tickets
         </Link>
       </div>

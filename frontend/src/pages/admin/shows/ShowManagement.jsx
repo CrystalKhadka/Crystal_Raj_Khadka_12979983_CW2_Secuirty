@@ -1,9 +1,9 @@
+import 'bootstrap-icons/font/bootstrap-icons.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getAllShowsApi } from '../../../apis/Api';
 import { toast } from 'react-toastify';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import 'bootstrap-icons/font/bootstrap-icons.css';
+import { getAllShowsApi } from '../../../apis/Api';
 
 const ShowManagement = () => {
   const [shows, setShows] = useState([]);
@@ -23,20 +23,21 @@ const ShowManagement = () => {
       })
       .catch((error) => {
         console.log(error);
-        toast.error("Failed to fetch shows. Please try again later.");
+        toast.error('Failed to fetch shows. Please try again later.');
         setLoading(false);
       });
   };
 
   const handleDelete = (id) => {
     // Implement delete functionality
-    toast.warning("Delete functionality not implemented");
+    toast.warning('Delete functionality not implemented');
   };
 
-  const filteredShows = shows.filter(show => 
-    show.movieId.movieName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    show.showDate.includes(searchTerm) ||
-    show.showTime.includes(searchTerm)
+  const filteredShows = shows.filter(
+    (show) =>
+      show.movieId.movieName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      show.showDate.includes(searchTerm) ||
+      show.showTime.includes(searchTerm)
   );
 
   return (
@@ -53,11 +54,12 @@ const ShowManagement = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              
             </div>
             {loading ? (
               <div className='text-center'>
-                <div className='spinner-border text-primary' role='status'>
+                <div
+                  className='spinner-border text-primary'
+                  role='status'>
                   <span className='visually-hidden'>Loading...</span>
                 </div>
               </div>
@@ -82,11 +84,11 @@ const ShowManagement = () => {
                       <tr key={show._id}>
                         <td>
                           <img
-                            width="50px"
-                            height="75px"
-                            src={`http://localhost:5000/movies/${show.movieId.moviePosterImage}`}
+                            width='50px'
+                            height='75px'
+                            src={`https://localhost:5000/movies/${show.movieId.moviePosterImage}`}
                             alt={show.movieId.movieName}
-                            className="img-thumbnail"
+                            className='img-thumbnail'
                           />
                         </td>
                         <td>{show.movieId.movieName}</td>
@@ -95,13 +97,14 @@ const ShowManagement = () => {
                         <td>{show.showTime}</td>
                         <td>Rs.{show.showPrice}</td>
                         <td>
-                          <Link to={`/admin/shows/edit/${show._id}`} className='btn btn-outline-primary btn-sm me-2'>
+                          <Link
+                            to={`/admin/shows/edit/${show._id}`}
+                            className='btn btn-outline-primary btn-sm me-2'>
                             <i className='bi bi-pencil me-1'></i>Edit
                           </Link>
-                          <button 
-                            onClick={() => handleDelete(show._id)} 
-                            className='btn btn-outline-danger btn-sm'
-                          >
+                          <button
+                            onClick={() => handleDelete(show._id)}
+                            className='btn btn-outline-danger btn-sm'>
                             <i className='bi bi-trash me-1'></i>Delete
                           </button>
                         </td>
