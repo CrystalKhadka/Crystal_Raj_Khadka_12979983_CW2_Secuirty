@@ -1,11 +1,12 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
 const {
   initializeKhalti,
   completeKhaltiPayment,
-} = require("../controllers/paymentController");
- 
-router.post("/initialize_khalti", initializeKhalti);
-router.get("/complete-khalti-payment", completeKhaltiPayment);
- 
+} = require('../controllers/paymentController');
+const { authGuard } = require('../middleware/authGuard');
+
+router.post('/initialize_khalti', authGuard, initializeKhalti);
+router.get('/complete-khalti-payment', authGuard, completeKhaltiPayment);
+
 module.exports = router;
