@@ -1,98 +1,205 @@
-const jwt = require("jsonwebtoken");
-const authGuard = (req, res, next) => {
-  // check incoming data
-  console.log(req.headers); //pass
+const jwt = require('jsonwebtoken');
+const Log = require('../models/logModel'); // Import the Log model
 
-  // get authorization data from headers
-  const authHeader = req.headers.authorization;
+/**
+ * Utility function to extract token from authorization header
+ * @param {string} authHeader - The authorization header
+ * @returns {string|null} - Extracted token or null
+ */
+const extractToken = (authHeader) => {
+  if (!authHeader || typeof authHeader !== 'string') return null;
 
-  // check or validate
-  if (!authHeader) {
-    return res.status(400).json({
-      success: false,
-      message: "Auth header is missing",
-    });
+  const parts = authHeader.split(' ');
+  if (parts.length === 2 && parts[0] === 'Bearer') {
+    return parts[1];
   }
 
-  // Split the data (Format : 'Bearer token-joyboy') -> only token
-  const token = authHeader.split(" ")[1];
-
-  // if token is not found : stop the process (res)
-  if (!token || token === "") {
-    return res.status(400).json({
-      success: false,
-      message: "Please provide a token",
-    });
-  }
-
-  // if token is found then verify
-  try {
-    const decodeUserData = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decodeUserData; //user info : id onlyf
-    next();
-  } catch (error) {
-    console.log(error);
-    return res.status(400).json({
-      success: false,
-      message: "Not Authenticated", 
-    });
-  }
-
-  // if verified : next (function in controller)
-  // if not verified : not auth
+  return null;
 };
 
-// Admin guard
-const adminGuard = (req, res, next) => {
-  // check incoming data
-  console.log(req.headers); //pass
-
-  // get authorization data from headers
-  const authHeader = req.headers.authorization;
-
-  // check or validate
-  if (!authHeader) {
-    return res.status(400).json({
-      success: false,
-      message: "Auth header is missing",
-    });
-  }
-
-  // Split the data (Format : 'Bearer token-joyboy') -> only token
-  const token = authHeader.split(" ")[1];
-
-  // if token is not found : stop the process (res)
-  if (!token || token === "") {
-    return res.status(400).json({
-      success: false,
-      message: "Please provide a token",
-    });
-  }
-
-  // if token is found then verify
+/**
+ * Logs activity to MongoDB
+ * @param {object} logData - Data to log
+ */
+const logActivity = async (logData) => {
   try {
-    const decodeUserData = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decodeUserData; // id, isadmin
-    if(!req.user.isAdmin){
-      return res.status(400).json({
-        success : false,
-        message : "Permission Denied"
-      })
+    await Log.create(logData);
+  } catch (err) {
+    console.error('Failed to log activity:', err.message);
+  }
+};
+
+/**
+ * Middleware to handle public routes
+ * Logs request details to MongoDB.
+ * @param {object} req - Request object
+ * @param {object} res - Response object
+ * @param {function} next - Next middleware function
+ */
+const publicGuard = async (req, res, next) => {
+  await logActivity({
+    level: 'info',
+    message: 'Public route accessed',
+    method: req.method,
+    url: req.originalUrl,
+    user: 'guest',
+    ip: req.ip,
+  });
+
+  // Set security-related headers
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+
+  next();
+};
+
+/**
+ * Middleware to validate authentication
+ * Logs authentication activity to MongoDB.
+ * @param {object} req - Request object
+ * @param {object} res - Response object
+ * @param {function} next - Next middleware function
+ */
+const authGuard = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    const token = extractToken(authHeader);
+
+    if (!token) {
+      await logActivity({
+        level: 'warn',
+        message: 'Authentication failed: missing or invalid token',
+        method: req.method,
+        url: req.originalUrl,
+        user: 'guest',
+        ip: req.ip,
+      });
+
+      return res.status(401).json({
+        success: false,
+        message: 'Authorization token is missing or invalid',
+      });
     }
+
+    const decodedUserData = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decodedUserData;
+
+    await logActivity({
+      level: 'info',
+      message: 'Authentication successful',
+      method: req.method,
+      url: req.originalUrl,
+      user: req.user.id,
+      ip: req.ip,
+    });
+
     next();
   } catch (error) {
-    console.log(error);
-    return res.status(400).json({
+    await logActivity({
+      level: 'error',
+      message: 'Authentication error',
+      error: error.message,
+      method: req.method,
+      url: req.originalUrl,
+      user: 'guest',
+      ip: req.ip,
+    });
+
+    return res.status(401).json({
       success: false,
-      message: "Not Authenticated", 
+      message:
+        error.name === 'JsonWebTokenError'
+          ? 'Invalid token'
+          : 'Authentication failed',
     });
   }
-
-  // if verified : next (function in controller)
-  // if not verified : not auth
 };
+
+/**
+ * Middleware to validate admin access
+ * Logs admin access activity to MongoDB.
+ * @param {object} req - Request object
+ * @param {object} res - Response object
+ * @param {function} next - Next middleware function
+ */
+const adminGuard = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    const token = extractToken(authHeader);
+
+    if (!token) {
+      await logActivity({
+        level: 'warn',
+        message: 'Authorization failed: missing or invalid token',
+        method: req.method,
+        url: req.originalUrl,
+        user: 'guest',
+        ip: req.ip,
+      });
+
+      return res.status(401).json({
+        success: false,
+        message: 'Authorization token is missing or invalid',
+      });
+    }
+
+    const decodedUserData = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decodedUserData;
+
+    if (!req.user.isAdmin) {
+      await logActivity({
+        level: 'warn',
+        message: 'Permission denied: not an admin',
+        method: req.method,
+        url: req.originalUrl,
+        user: req.user.id,
+        ip: req.ip,
+      });
+
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Admin privileges required.',
+      });
+    }
+
+    await logActivity({
+      level: 'info',
+      message: 'Admin access granted',
+      method: req.method,
+      url: req.originalUrl,
+      user: req.user.id,
+      ip: req.ip,
+    });
+
+    next();
+  } catch (error) {
+    await logActivity({
+      level: 'error',
+      message: 'Authorization error',
+      error: error.message,
+      method: req.method,
+      url: req.originalUrl,
+      user: 'guest',
+      ip: req.ip,
+    });
+
+    return res.status(401).json({
+      success: false,
+      message:
+        error.name === 'JsonWebTokenError'
+          ? 'Invalid token'
+          : 'Authorization failed',
+    });
+  }
+};
+
+// Ensure JWT_SECRET is set
+if (!process.env.JWT_SECRET) {
+  throw new Error('JWT_SECRET environment variable is not defined!');
+}
 
 module.exports = {
+  publicGuard,
   authGuard,
-  adminGuard
+  adminGuard,
 };
