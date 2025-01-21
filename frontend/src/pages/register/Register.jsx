@@ -1,10 +1,8 @@
 import {
   Email,
-  LocalMovies,
   Lock,
   Person,
   Phone,
-  Theaters,
   Visibility,
   VisibilityOff,
 } from '@mui/icons-material';
@@ -12,11 +10,11 @@ import {
   Box,
   Button,
   Container,
-  Divider,
   Fade,
   Grow,
   IconButton,
   InputAdornment,
+  LinearProgress,
   Paper,
   Stack,
   TextField,
@@ -26,7 +24,8 @@ import {
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { registerUserApi } from '../../apis/Api';
+import zxcvbn from 'zxcvbn'; // Import zxcvbn for password strength evaluation
+import { registerUserApi } from '../../apis/Api'; // Replace with your actual API endpoint
 
 const Register = () => {
   const theme = useTheme();
@@ -47,6 +46,11 @@ const Register = () => {
     confirmPassword: '',
   });
 
+  const [passwordStrength, setPasswordStrength] = useState({
+    score: 0,
+    feedback: '',
+  });
+
   const [showPassword, setShowPassword] = useState({
     password: false,
     confirmPassword: false,
@@ -54,11 +58,23 @@ const Register = () => {
 
   const [isLoading, setIsLoading] = useState(false);
 
+  // Handle form input changes
   const handleChange = (field) => (event) => {
-    setFormData({ ...formData, [field]: event.target.value });
+    const value = event.target.value;
+
+    setFormData({ ...formData, [field]: value });
     setErrors({ ...errors, [field]: '' });
+
+    if (field === 'password') {
+      const strength = zxcvbn(value);
+      setPasswordStrength({
+        score: strength.score,
+        feedback: strength.feedback.suggestions.join(' ') || 'Strong password!',
+      });
+    }
   };
 
+  // Toggle password visibility
   const togglePasswordVisibility = (field) => () => {
     setShowPassword({
       ...showPassword,
@@ -66,11 +82,11 @@ const Register = () => {
     });
   };
 
+  // Validate form inputs
   const validate = () => {
     let isValid = true;
     const newErrors = { ...errors };
 
-    // Enhanced validation rules
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const phoneRegex = /^\+?[\d\s-]{10,}$/;
     const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
@@ -90,9 +106,9 @@ const Register = () => {
       isValid = false;
     }
 
-    if (!passwordRegex.test(formData.password)) {
+    if (passwordStrength.score < 2) {
       newErrors.password =
-        'Password must be at least 8 characters with letters and numbers';
+        'Password is too weak. Please choose a stronger password.';
       isValid = false;
     }
 
@@ -105,6 +121,7 @@ const Register = () => {
     return isValid;
   };
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
@@ -118,7 +135,7 @@ const Register = () => {
     };
 
     try {
-      const res = await registerUserApi(data);
+      const res = await registerUserApi(data); // Call API to register user
       toast.success(res.data.message);
     } catch (err) {
       if (err.response) {
@@ -131,6 +148,7 @@ const Register = () => {
     }
   };
 
+  // Shared TextField properties for consistent styling
   const textFieldProps = {
     fullWidth: true,
     variant: 'outlined',
@@ -153,6 +171,24 @@ const Register = () => {
     },
   };
 
+  // Map password strength score to color
+  const getStrengthColor = (score) => {
+    switch (score) {
+      case 0:
+        return theme.palette.error.main;
+      case 1:
+        return theme.palette.warning.main;
+      case 2:
+        return theme.palette.info.main;
+      case 3:
+        return theme.palette.success.light;
+      case 4:
+        return theme.palette.success.main;
+      default:
+        return theme.palette.grey[400];
+    }
+  };
+
   return (
     <Container
       maxWidth='sm'
@@ -173,60 +209,18 @@ const Register = () => {
             in
             timeout={1200}>
             <Box>
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  gap: 2,
-                  mb: 3,
-                  transform: 'scale(1.2)',
-                }}>
-                <LocalMovies
-                  sx={{
-                    fontSize: 40,
-                    color: theme.palette.primary.main,
-                    filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
-                  }}
-                />
-                <Theaters
-                  sx={{
-                    fontSize: 40,
-                    color: theme.palette.primary.main,
-                    filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
-                  }}
-                />
-              </Box>
-
               <Typography
                 variant='h4'
-                component='h1'
                 align='center'
-                gutterBottom
                 sx={{
-                  fontWeight: 700,
-                  background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.primary.light})`,
-                  backgroundClip: 'text',
-                  WebkitBackgroundClip: 'text',
-                  color: 'transparent',
-                  textShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                  mb: 1,
+                  mb: 3,
+                  fontWeight: 'bold',
                 }}>
-                Create an account
+                Create an Account
               </Typography>
-
-              <Typography
-                variant='body1'
-                align='center'
-                color='text.secondary'
-                sx={{ mb: 4, maxWidth: '80%', mx: 'auto' }}>
-                Your ticket to cinematic adventures awaits
-              </Typography>
-
-              <Divider sx={{ mb: 4 }} />
 
               <form onSubmit={handleSubmit}>
-                <Stack spacing={2.5}>
-                  {/* Form fields remain the same but with enhanced textFieldProps */}
+                <Stack spacing={2}>
                   <TextField
                     {...textFieldProps}
                     label='Username'
@@ -298,8 +292,7 @@ const Register = () => {
                         <InputAdornment position='end'>
                           <IconButton
                             onClick={togglePasswordVisibility('password')}
-                            edge='end'
-                            size='large'>
+                            edge='end'>
                             {showPassword.password ? (
                               <VisibilityOff />
                             ) : (
@@ -310,6 +303,34 @@ const Register = () => {
                       ),
                     }}
                   />
+
+                  {/* Password Strength Bar */}
+                  {formData.password && (
+                    <Box>
+                      <LinearProgress
+                        variant='determinate'
+                        value={(passwordStrength.score + 1) * 20}
+                        sx={{
+                          height: 8,
+                          borderRadius: 5,
+                          backgroundColor: theme.palette.grey[300],
+                          '& .MuiLinearProgress-bar': {
+                            backgroundColor: getStrengthColor(
+                              passwordStrength.score
+                            ),
+                          },
+                        }}
+                      />
+                      <Typography
+                        variant='body2'
+                        sx={{
+                          mt: 1,
+                          color: getStrengthColor(passwordStrength.score),
+                        }}>
+                        {passwordStrength.feedback}
+                      </Typography>
+                    </Box>
+                  )}
 
                   <TextField
                     {...textFieldProps}
@@ -333,8 +354,7 @@ const Register = () => {
                             onClick={togglePasswordVisibility(
                               'confirmPassword'
                             )}
-                            edge='end'
-                            size='large'>
+                            edge='end'>
                             {showPassword.confirmPassword ? (
                               <VisibilityOff />
                             ) : (
@@ -345,65 +365,30 @@ const Register = () => {
                       ),
                     }}
                   />
+                </Stack>
 
-                  <Button
-                    type='submit'
-                    variant='contained'
-                    size='large'
-                    fullWidth
-                    disabled={isLoading}
-                    sx={{
-                      mt: 4,
-                      mb: 2,
-                      py: 1.5,
-                      fontSize: '1.1rem',
-                      fontWeight: 600,
-                      textTransform: 'none',
-                      borderRadius: 2,
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                      '&:hover': {
-                        boxShadow: '0 6px 16px rgba(0,0,0,0.2)',
-                        transform: 'translateY(-1px)',
-                      },
-                      transition: 'all 0.2s ease-in-out',
-                    }}>
-                    {isLoading ? 'Creating Account...' : 'Register'}
-                  </Button>
+                <Button
+                  type='submit'
+                  variant='contained'
+                  sx={{ mt: 3 }}
+                  disabled={isLoading}>
+                  {isLoading ? 'Creating Account...' : 'Register'}
+                </Button>
 
-                  <Box
-                    sx={{
-                      textAlign: 'center',
-                      mt: 2,
-                      p: 2,
-                      borderRadius: 2,
-                      backgroundColor: theme.palette.background.default,
-                    }}>
-                    <Typography
-                      variant='body2'
-                      color='text.secondary'
-                      component='span'>
-                      Already have a ticket?{' '}
-                    </Typography>
+                <Box
+                  sx={{
+                    textAlign: 'center',
+                    mt: 2,
+                  }}>
+                  <Typography variant='body2'>
+                    Already have an account?{' '}
                     <Link
                       to='/login'
-                      style={{
-                        textDecoration: 'none',
-                      }}>
-                      <Typography
-                        variant='body2'
-                        component='span'
-                        color='primary'
-                        sx={{
-                          fontWeight: 600,
-                          '&:hover': {
-                            textDecoration: 'underline',
-                          },
-                        }}>
-                        Login Now
-                      </Typography>
+                      style={{ color: theme.palette.primary.main }}>
+                      Login here
                     </Link>
-                  </Box>
-                </Stack>
+                  </Typography>
+                </Box>
               </form>
             </Box>
           </Fade>
