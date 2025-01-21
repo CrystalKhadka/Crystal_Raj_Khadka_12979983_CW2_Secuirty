@@ -74,6 +74,8 @@ const loginUser = async (req, res) => {
   // Destructure email and password from request body
   const { email, password } = req.body;
 
+  const device = req.headers['user-agent'];
+
   // Validate input fields
   if (!email || !password) {
     return res.status(400).json({
@@ -132,6 +134,13 @@ const loginUser = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: '1h' } // Token expires in 1 hour
     );
+
+    user.loginDevices.push(device);
+    await user.save();
+
+    // Set security-related headers
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'DENY');
 
     // Respond with token and user data
     res.status(200).json({

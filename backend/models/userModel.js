@@ -41,6 +41,9 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 0, // Track login attempts within a session
   },
+  loginDevices: [],
+
+  myDevices: [],
 });
 
 // Define a virtual property to check if the account is locked
@@ -82,6 +85,11 @@ userSchema.methods.resetLoginAttempts = async function () {
   this.loginAttempts = 0;
   this.accountLockUntil = null;
   await this.save();
+};
+
+// Instance method to check if the user has exceeded the maximum login attempts
+userSchema.methods.hasExceededMaxLoginAttempts = function () {
+  return this.loginAttempts >= 5;
 };
 
 const User = mongoose.model('users', userSchema);
