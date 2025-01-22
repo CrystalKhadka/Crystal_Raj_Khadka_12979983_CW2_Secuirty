@@ -53,7 +53,7 @@ const Navbar = () => {
   const navItems = [
     { path: '/homepage', label: 'Home' },
     { path: '/coming-soon', label: 'Coming Soon' },
-    { path: '/tickets', label: 'Tickets' },
+    { path: '/user/tickets', label: 'Tickets' },
     { path: '/aboutUs', label: 'About Us' },
     { path: '/contactUs', label: 'Contact Us' },
   ];
@@ -184,7 +184,7 @@ const Navbar = () => {
                       }}>
                       <MenuItem
                         component={Link}
-                        to='/profile'
+                        to='/user/profile'
                         onClick={handleProfileMenuClose}>
                         Profile
                       </MenuItem>
