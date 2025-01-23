@@ -6,7 +6,7 @@ const https = require('https');
 const cors = require('cors');
 const fs = require('fs');
 const accessFormData = require('express-fileupload');
-
+const rateLimit = require('express-rate-limit');
 // Load environment variables from .env file
 dotenv.config();
 
@@ -38,6 +38,21 @@ app.use(cors(corsOptions));
 
 // Express JSON Config
 app.use(express.json());
+
+// Define a rate limit
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per window
+  message: {
+    status: 'fail',
+    message:
+      'Too many requests from this IP, please try again after 15 minutes.',
+  },
+  headers: true, // Include rate limit info in headers
+});
+
+// Apply the rate limit to all routes
+app.use(limiter);
 
 // Enable file upload
 app.use(accessFormData());
