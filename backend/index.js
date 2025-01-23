@@ -7,6 +7,7 @@ const cors = require('cors');
 const fs = require('fs');
 const accessFormData = require('express-fileupload');
 const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
 // Load environment variables from .env file
 dotenv.config();
 
@@ -53,6 +54,9 @@ const limiter = rateLimit({
 
 // Apply the rate limit to all routes
 app.use(limiter);
+
+// Use Helmet middleware
+app.use(helmet());
 
 // Enable file upload
 app.use(accessFormData());
