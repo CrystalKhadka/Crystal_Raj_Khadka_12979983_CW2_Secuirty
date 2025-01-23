@@ -19,7 +19,6 @@ import {
 import { googleLogout } from '@react-oauth/google';
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import AdminNavbar from './AdminNavbar';
 
 const Navbar = () => {
   const location = useLocation();
@@ -59,7 +58,7 @@ const Navbar = () => {
   ];
 
   if (user?.isAdmin) {
-    return <AdminNavbar />;
+    return <></>;
   }
 
   const renderMobileMenu = (

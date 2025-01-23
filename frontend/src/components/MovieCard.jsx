@@ -55,7 +55,7 @@ const MovieCard = ({ movieInformation, color }) => {
           {movieInformation.movieDetails.slice(0, 80)}...
         </p>
         <Link
-          to={`/movie/buyTickets/${movieInformation._id}`}
+          to={`/user/movie/buyTickets/${movieInformation._id}`}
           className='buy-tickets-btn'>
           Buy Tickets
         </Link>

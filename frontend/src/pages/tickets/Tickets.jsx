@@ -1,19 +1,33 @@
-import React, { useEffect, useState } from "react";
-import { getBookingsByUserApi } from "../../apis/Api";
-import { QRCodeSVG } from "qrcode.react";
-import "./Tickets.css";
+import {
+  Box,
+  Card,
+  CardContent,
+  CardHeader,
+  Container,
+  Grid,
+  List,
+  ListItem,
+  Paper,
+  Typography,
+} from '@mui/material';
+import { styled } from '@mui/material/styles';
+import { QRCodeSVG } from 'qrcode.react';
+import React, { useEffect, useState } from 'react';
+import { getBookingsByUserApi } from '../../apis/Api';
 
-const Card = ({ children, className }) => (
-  <div className={`card ${className}`}>{children}</div>
-);
-
-const CardHeader = ({ children, className }) => (
-  <div className={`card-header ${className}`}>{children}</div>
-);
-
-const CardContent = ({ children, className }) => (
-  <div className={`card-content ${className}`}>{children}</div>
-);
+const StyledTicketNumber = styled(Box)(({ theme }) => ({
+  position: 'absolute',
+  top: -15,
+  left: -15,
+  backgroundColor: theme.palette.primary.main,
+  color: theme.palette.primary.contrastText,
+  borderRadius: '50%',
+  width: 30,
+  height: 30,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+}));
 
 const Tickets = () => {
   const [tickets, setTickets] = useState([]);
@@ -46,75 +60,110 @@ const Tickets = () => {
   const groupedTickets = groupTicketsByDate(tickets);
 
   return (
-    <>
-    <div className="tickets-container my-5">
-      <h2 className="tickets-title">My Tickets</h2>
-      {tickets.length === 0 ? (
-        <p className="no-tickets">No tickets available</p>
-      ) : (
-        Object.entries(groupedTickets).map(([date, dateTickets]) => (
-          <div key={date} className="date-group">
-            <h3 className="date-header">{date}</h3>
-            <div className="tickets-grid">
-              {dateTickets.map((ticket, index) => {
-                const { show, seats, user, price } = ticket;
-                const { movieId, showDate, showTime } = show;
-                const { movieName } = movieId;
+    <Container maxWidth='lg'>
+      <Box sx={{ my: 10 }}>
+        <Typography
+          variant='h4'
+          gutterBottom>
+          My Tickets
+        </Typography>
+        {tickets.length === 0 ? (
+          <Typography variant='body1'>No tickets available</Typography>
+        ) : (
+          Object.entries(groupedTickets).map(([date, dateTickets]) => (
+            <Box
+              key={date}
+              sx={{ mb: 4 }}>
+              <Typography
+                variant='h5'
+                sx={{ mb: 2 }}>
+                {date}
+              </Typography>
+              <Grid
+                container
+                spacing={3}>
+                {dateTickets.map((ticket, index) => {
+                  const { show, seats, user, price } = ticket;
+                  const { movieId, showDate, showTime } = show;
+                  const { movieName } = movieId;
 
-                return (
-                  <div key={ticket._id} className="ticket-item">
-                    <div className="ticket-number">{index + 1}</div>
-                    <Card>
-                      <CardHeader>
-                        <div>
-                          <h3 className="movie-title">{movieName}</h3>
-                          <p className="show-time">
-                            {new Date(showDate).toLocaleDateString()} at{" "}
-                            {showTime}
-                          </p>
-                        </div>
-                        <QRCodeSVG
-                          value={`Ticket ID: ${ticket._id}`}
-                          size={64}
-                        />
-                      </CardHeader>
-                      <CardContent>
-                        <div className="ticket-details">
-                          <div>
-                            <h4>Seats</h4>
-                            {seats.length > 0 ? (
-                              <ul className="seat-list">
-                                {seats.map((seat) => (
-                                  <li key={seat._id}>
-                                    Seat Number: {seat.seatNo}
-                                  </li>
-                                ))}
-                              </ul>
-                            ) : (
-                              <p>No seats selected</p>
-                            )}
-                          </div>
-                          <div>
-                            <h4>User Information</h4>
-                            <p>Username: {user.username}</p>
-                            <p>Email: {user.email}</p>
-                            <p>Phone: {user.phoneNumber}</p>
-                          </div>
-                        </div>
-                        <div className="ticket-price">
-                          <p>Price: Rs.{price}</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        ))
-      )}
-      </div>
-    </>
+                  return (
+                    <Grid
+                      item
+                      xs={12}
+                      md={6}
+                      key={ticket._id}>
+                      <Paper
+                        elevation={3}
+                        sx={{ position: 'relative' }}>
+                        <StyledTicketNumber>{index + 1}</StyledTicketNumber>
+                        <Card>
+                          <CardHeader
+                            title={movieName}
+                            subheader={`${new Date(
+                              showDate
+                            ).toLocaleDateString()} at ${showTime}`}
+                            action={
+                              <QRCodeSVG
+                                value={`Ticket ID: ${ticket._id}`}
+                                size={64}
+                              />
+                            }
+                          />
+                          <CardContent>
+                            <Grid
+                              container
+                              spacing={2}>
+                              <Grid
+                                item
+                                xs={12}
+                                sm={6}>
+                                <Typography variant='h6'>Seats</Typography>
+                                {seats.length > 0 ? (
+                                  <List dense>
+                                    {seats.map((seat) => (
+                                      <ListItem key={seat._id}>
+                                        Seat Number: {seat.seatNo}
+                                      </ListItem>
+                                    ))}
+                                  </List>
+                                ) : (
+                                  <Typography>No seats selected</Typography>
+                                )}
+                              </Grid>
+                              <Grid
+                                item
+                                xs={12}
+                                sm={6}>
+                                <Typography variant='h6'>
+                                  User Information
+                                </Typography>
+                                <Typography>
+                                  Username: {user.username}
+                                </Typography>
+                                <Typography>Email: {user.email}</Typography>
+                                <Typography>
+                                  Phone: {user.phoneNumber}
+                                </Typography>
+                              </Grid>
+                            </Grid>
+                            <Box sx={{ mt: 2, textAlign: 'right' }}>
+                              <Typography variant='h6'>
+                                Price: Rs.{price}
+                              </Typography>
+                            </Box>
+                          </CardContent>
+                        </Card>
+                      </Paper>
+                    </Grid>
+                  );
+                })}
+              </Grid>
+            </Box>
+          ))
+        )}
+      </Box>
+    </Container>
   );
 };
 

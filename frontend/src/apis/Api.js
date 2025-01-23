@@ -29,7 +29,8 @@ export const registerUserApi = (data) => Api.post('/api/user/create', data);
 export const loginUserApi = (data) => Api.post('/api/user/login', data);
 
 // Create Movie API
-export const createMovieApi = (data) => Api.post('/api/movie/create', data);
+export const createMovieApi = (data) =>
+  Api.post('/api/movie/create', data, config);
 
 // Fetch all Movies API
 export const getAllMoviesApi = () =>

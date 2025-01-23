@@ -1,6 +1,15 @@
-import React, { useMemo } from "react";
-import { FaCheckCircle } from "react-icons/fa";
-import { Link, useLocation } from "react-router-dom";
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import {
+  Alert,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Container,
+  Typography,
+} from '@mui/material';
+import React, { useMemo } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 
 const PaymentSuccess = () => {
   const location = useLocation();
@@ -8,44 +17,78 @@ const PaymentSuccess = () => {
     () => new URLSearchParams(location.search),
     [location.search]
   );
-  const transactionId = queryParams.get("transaction_id");
+  const transactionId = queryParams.get('transaction_id');
 
   return (
-    <div className="container-fluid bg-light min-vh-100 d-flex align-items-center justify-content-center py-5">
-      <div className="card border-0 shadow-lg" style={{ maxWidth: "400px" }}>
-        <div className="card-body p-5">
-          <div className="text-center mb-4">
-            <FaCheckCircle
-              className="text-success"
-              style={{ fontSize: "5rem" }}
+    <Container
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        py: 5,
+        bgcolor: 'grey.100',
+      }}>
+      <Card
+        elevation={5}
+        sx={{ maxWidth: 400 }}>
+        <CardContent sx={{ p: 5 }}>
+          <Box sx={{ textAlign: 'center', mb: 4 }}>
+            <CheckCircleIcon
+              color='success'
+              sx={{ fontSize: 80 }}
             />
-          </div>
-          <h1 className="card-title text-center mb-4 fw-bold text-primary">
+          </Box>
+
+          <Typography
+            variant='h4'
+            component='h1'
+            color='primary'
+            align='center'
+            fontWeight='bold'
+            gutterBottom>
             Payment Successful!
-          </h1>
-          <p className="card-text text-center text-muted mb-4">
+          </Typography>
+
+          <Typography
+            variant='body1'
+            color='text.secondary'
+            align='center'
+            sx={{ mb: 4 }}>
             Thank you for your adoption payment. Your transaction was
             successful.
-          </p>
+          </Typography>
+
           {transactionId && (
-            <div
-              className="alert alert-info text-center py-2 mb-4"
-              role="alert"
-            >
-              <small>Transaction ID: {transactionId}</small>
-            </div>
+            <Alert
+              severity='info'
+              sx={{
+                mb: 4,
+                py: 1,
+                display: 'flex',
+                justifyContent: 'center',
+              }}>
+              <Typography variant='body2'>
+                Transaction ID: {transactionId}
+              </Typography>
+            </Alert>
           )}
-          <div className="d-grid gap-2">
-            <Link
-              to="/tickets"
-              className="btn btn-primary btn-lg fw-bold text-uppercase"
-            >
-              View Tickets
-            </Link>
-          </div>
-        </div>
-      </div>
-    </div>
+
+          <Button
+            component={Link}
+            to='/tickets'
+            variant='contained'
+            size='large'
+            fullWidth
+            sx={{
+              fontWeight: 'bold',
+              textTransform: 'uppercase',
+            }}>
+            View Tickets
+          </Button>
+        </CardContent>
+      </Card>
+    </Container>
   );
 };
 

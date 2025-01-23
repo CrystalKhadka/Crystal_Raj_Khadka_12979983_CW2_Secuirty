@@ -1,15 +1,28 @@
 import {
-  faCalendar,
-  faClock,
-  faCouch,
-  faTicket,
-} from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+  AccessTime,
+  CalendarMonth,
+  Close as CloseIcon,
+  ConfirmationNumber,
+  Weekend,
+} from '@mui/icons-material';
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  CardMedia,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Grid,
+  IconButton,
+  Typography,
+} from '@mui/material';
 import { format } from 'date-fns';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Badge, Button, Card, Modal } from 'react-bootstrap';
 import { useParams } from 'react-router-dom';
-import { toast } from 'react-toastify';
 import {
   bookTicketsApi,
   getSeatsByShowIdApi,
@@ -18,11 +31,9 @@ import {
   initializeKhalti,
   makeSeatUnavailableApi,
 } from '../../../apis/Api';
-import './BuyTickets.css';
 
 const BuyTickets = () => {
   const { id } = useParams();
-
   const [movie, setMovie] = useState({});
   const [shows, setShows] = useState([]);
   const [selectedShow, setSelectedShow] = useState(null);
@@ -36,7 +47,7 @@ const BuyTickets = () => {
       const res = await getSingleMovieApi(id);
       setMovie(res.data.movie);
     } catch (error) {
-      toast.error('Failed to fetch movie details');
+      console.error('Failed to fetch movie details');
     }
   }, [id]);
 
@@ -45,7 +56,7 @@ const BuyTickets = () => {
       const res = await getShowByMovieIdApi(id);
       setShows(res.data.shows);
     } catch (error) {
-      toast.error('Failed to fetch show details');
+      console.error('Failed to fetch show details');
     }
   }, [id]);
 
@@ -60,259 +71,302 @@ const BuyTickets = () => {
   };
 
   const handleOpenModal = async () => {
-    if (selectedShow) {
-      try {
-        const res = await getSeatsByShowIdApi(selectedShow._id);
-        setSeats(res.data.seats);
-        setShowModal(true);
-      } catch (error) {
-        toast.error('Failed to fetch seats');
-      }
-    } else {
-      toast.error('Please select a show to book tickets.');
+    if (!selectedShow) {
+      console.error('Please select a show');
+      return;
+    }
+    try {
+      const res = await getSeatsByShowIdApi(selectedShow._id);
+      setSeats(res.data.seats);
+      setShowModal(true);
+    } catch (error) {
+      console.error('Failed to fetch seats');
     }
   };
 
   const handleSeatSelection = (seat) => {
-    if (selectedSeats.includes(seat)) {
-      setSelectedSeats(selectedSeats.filter((s) => s !== seat));
-    } else {
-      setSelectedSeats([...selectedSeats, seat]);
-    }
-  };
-
-  const handleOpenConfirmationModal = () => {
-    if (selectedSeats.length > 0) {
-      setShowConfirmationModal(true);
-      setShowModal(false);
-    } else {
-      toast.error('Please select at least one seat.');
-    }
-  };
-
-  const handleCloseModal = () => setShowModal(false);
-  const handleCloseConfirmationModal = () => {
-    setShowConfirmationModal(false);
-    setSelectedSeats([]);
-    setSeats([]);
+    setSelectedSeats((prev) =>
+      prev.includes(seat) ? prev.filter((s) => s !== seat) : [...prev, seat]
+    );
   };
 
   const handleProceedToPayment = async () => {
-    if (selectedShow && selectedSeats.length > 0) {
-      const totalAmount = selectedShow.showPrice * selectedSeats.length;
-      const priceInPaise = parseInt(totalAmount * 100);
+    if (!selectedShow || !selectedSeats.length) {
+      console.error('Please select show and seats');
+      return;
+    }
 
-      const data = {
-        show: selectedShow._id,
-        seats: selectedSeats,
-        price: totalAmount,
+    const totalAmount = selectedShow.showPrice * selectedSeats.length;
+    const data = {
+      show: selectedShow._id,
+      seats: selectedSeats,
+      price: totalAmount,
+    };
+
+    try {
+      const bookingRes = await bookTicketsApi(data);
+      const khaltiConfig = {
+        itemId: bookingRes.data.id,
+        totalPrice: parseInt(totalAmount * 100),
+        website_url: 'https://localhost:3000',
       };
 
-      try {
-        const bookingRes = await bookTicketsApi(data);
-        toast.success(bookingRes.data.message);
+      const khaltiRes = await initializeKhalti(khaltiConfig);
+      window.location.href = khaltiRes.data.payment_url;
+      await makeSeatUnavailableApi(data);
 
-        const khaltiConfig = {
-          itemId: bookingRes.data.id,
-          totalPrice: priceInPaise,
-          website_url: 'https://localhost:3000',
-        };
-
-        const khaltiRes = await initializeKhalti(khaltiConfig);
-        window.location.href = khaltiRes.data.payment_url;
-
-        // Update seat availability after successful booking
-        await makeSeatUnavailableApi(data);
-
-        // Close confirmation modal after booking
-        handleCloseConfirmationModal();
-      } catch (error) {
-        if (error.response) {
-          toast.error(error.response.data.message);
-        } else {
-          console.log(error);
-          toast.error('Something went wrong!');
-        }
-      }
-    } else {
-      toast.error(
-        'Please select a show and at least one seat to proceed to payment.'
-      );
+      setShowConfirmationModal(true);
+    } catch (error) {
+      console.error('Payment failed:', error);
     }
   };
 
   const renderSeats = () => (
-    <div className='seat-grid'>
+    <Box
+      sx={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: 1 }}>
       {seats.map((seat) => (
-        <button
+        <IconButton
           key={seat._id}
-          className={`seat-button ${
-            selectedSeats.includes(seat) ? 'selected' : ''
-          } ${!seat.available ? 'unavailable' : ''}`}
+          onClick={() => handleSeatSelection(seat)}
           disabled={!seat.available}
-          onClick={() => handleSeatSelection(seat)}>
-          <FontAwesomeIcon icon={faCouch} />
-          <span>{seat.seatNo}</span>
-        </button>
+          sx={{
+            color: !seat.available
+              ? 'grey.400'
+              : selectedSeats.includes(seat)
+              ? 'primary.main'
+              : 'grey.700',
+          }}>
+          <Weekend />
+          <Typography variant='caption'>{seat.seatNo}</Typography>
+        </IconButton>
       ))}
-    </div>
+    </Box>
   );
 
   const groupedShows = shows.reduce((acc, show) => {
     const { showDate } = show;
-    if (!acc[showDate]) {
-      acc[showDate] = [];
-    }
+    if (!acc[showDate]) acc[showDate] = [];
     acc[showDate].push(show);
     return acc;
   }, {});
 
   return (
-    <div className='container my-5 pt-5'>
-      <div className='row'>
-        <div className='col-md-4'>
-          <Card className='movie-card'>
-            <Card.Img
-              variant='top'
-              src={`https://localhost:5000/movies/${movie.moviePosterImage}`}
+    <Box sx={{ p: 5, pt: 8 }}>
+      <Grid
+        container
+        spacing={4}>
+        <Grid
+          item
+          xs={12}
+          md={4}>
+          <Card>
+            <CardMedia
+              component='img'
+              image={`https://localhost:5000/movies/${movie.moviePosterImage}`}
               alt={movie.movieName}
             />
-            <Card.Body>
-              <Card.Title>{movie.movieName}</Card.Title>
-              <Card.Text>
-                <Badge bg='info'>{movie.movieGenre}</Badge>{' '}
-                <Badge bg='warning'>{movie.movieRated}</Badge>
-              </Card.Text>
-              <Card.Text>{movie.movieDetails}</Card.Text>
-              <Card.Text>Duration: {movie.movieDuration} </Card.Text>
-            </Card.Body>
+            <CardContent>
+              <Typography
+                variant='h5'
+                gutterBottom>
+                {movie.movieName}
+              </Typography>
+              <Box sx={{ mb: 2 }}>
+                <Chip
+                  label={movie.movieGenre}
+                  color='info'
+                  sx={{ mr: 1 }}
+                />
+                <Chip
+                  label={movie.movieRated}
+                  color='warning'
+                />
+              </Box>
+              <Typography>{movie.movieDetails}</Typography>
+              <Typography>Duration: {movie.movieDuration}</Typography>
+            </CardContent>
           </Card>
-        </div>
+        </Grid>
 
-        <div className='col-md-8'>
-          <h2 className='mb-4'>Available Shows</h2>
+        <Grid
+          item
+          xs={12}
+          md={8}>
+          <Typography
+            variant='h4'
+            gutterBottom>
+            Available Shows
+          </Typography>
 
           {Object.entries(groupedShows).map(([date, dateShows]) => (
-            <div
+            <Box
               key={date}
-              className='mb-4'>
-              <h3>
-                <FontAwesomeIcon icon={faCalendar} />{' '}
+              sx={{ mb: 4 }}>
+              <Typography
+                variant='h6'
+                sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <CalendarMonth sx={{ mr: 1 }} />
                 {format(new Date(date), 'MMMM dd, yyyy')}
-              </h3>
-              <div className='row'>
+              </Typography>
+
+              <Grid
+                container
+                spacing={2}>
                 {dateShows.map((show) => (
-                  <div
-                    key={show._id}
-                    className='col-md-4 mb-3'>
+                  <Grid
+                    item
+                    xs={12}
+                    sm={6}
+                    md={4}
+                    key={show._id}>
                     <Card
-                      className={`show-card ${
-                        selectedShow?._id === show._id ? 'selected' : ''
-                      }`}
-                      onClick={() => handleSelectShow(show)}>
-                      <Card.Body>
-                        <Card.Title>
-                          <FontAwesomeIcon icon={faClock} /> {show.showTime}
-                        </Card.Title>
-                        <Card.Text>
-                          <FontAwesomeIcon icon={faTicket} /> Price: Rs.
+                      onClick={() => handleSelectShow(show)}
+                      sx={{
+                        cursor: 'pointer',
+                        bgcolor:
+                          selectedShow?._id === show._id
+                            ? 'primary.light'
+                            : 'background.paper',
+                      }}>
+                      <CardContent>
+                        <Typography
+                          sx={{ display: 'flex', alignItems: 'center' }}>
+                          <AccessTime sx={{ mr: 1 }} /> {show.showTime}
+                        </Typography>
+                        <Typography
+                          sx={{ display: 'flex', alignItems: 'center' }}>
+                          <ConfirmationNumber sx={{ mr: 1 }} /> Rs.
                           {show.showPrice}
-                        </Card.Text>
-                      </Card.Body>
+                        </Typography>
+                      </CardContent>
                     </Card>
-                  </div>
+                  </Grid>
                 ))}
-              </div>
-            </div>
+              </Grid>
+            </Box>
           ))}
 
           <Button
-            variant='primary'
-            size='lg'
-            className='mt-4'
-            onClick={handleOpenModal}>
+            variant='contained'
+            size='large'
+            onClick={handleOpenModal}
+            sx={{ mt: 4 }}>
             Select Seats
           </Button>
-        </div>
-      </div>
+        </Grid>
+      </Grid>
 
-      <Modal
-        show={showModal}
-        onHide={handleCloseModal}
-        size='lg'
-        centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Select Your Seats</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <div className='screen-container'>
-            <div className='screen'>Screen</div>
-          </div>
+      <Dialog
+        open={showModal}
+        onClose={() => setShowModal(false)}
+        maxWidth='md'
+        fullWidth>
+        <DialogTitle>
+          Select Your Seats
+          <IconButton
+            onClick={() => setShowModal(false)}
+            sx={{ position: 'absolute', right: 8, top: 8 }}>
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent>
+          <Box
+            sx={{
+              width: '100%',
+              height: 8,
+              bgcolor: 'grey.300',
+              borderRadius: 1,
+              mb: 4,
+              mt: 2,
+            }}>
+            <Typography
+              align='center'
+              variant='caption'>
+              Screen
+            </Typography>
+          </Box>
           {renderSeats()}
-          <div className='seat-legend mt-4'>
-            <span className='seat-type available'>Available</span>
-            <span className='seat-type selected'>Selected</span>
-            <span className='seat-type unavailable'>Unavailable</span>
-          </div>
-        </Modal.Body>
-        <Modal.Footer>
+          <Box
+            sx={{ mt: 4, display: 'flex', gap: 2, justifyContent: 'center' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Weekend sx={{ color: 'grey.700' }} />
+              <Typography
+                variant='caption'
+                sx={{ ml: 1 }}>
+                Available
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Weekend sx={{ color: 'primary.main' }} />
+              <Typography
+                variant='caption'
+                sx={{ ml: 1 }}>
+                Selected
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Weekend sx={{ color: 'grey.400' }} />
+              <Typography
+                variant='caption'
+                sx={{ ml: 1 }}>
+                Unavailable
+              </Typography>
+            </Box>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowModal(false)}>Close</Button>
           <Button
-            variant='secondary'
-            onClick={handleCloseModal}>
-            Close
-          </Button>
-          <Button
-            variant='primary'
-            onClick={handleOpenConfirmationModal}>
+            onClick={() => {
+              if (selectedSeats.length) {
+                setShowConfirmationModal(true);
+                setShowModal(false);
+              }
+            }}
+            variant='contained'>
             Confirm Selection
           </Button>
-        </Modal.Footer>
-      </Modal>
+        </DialogActions>
+      </Dialog>
 
-      <Modal
-        show={showConfirmationModal}
-        onHide={handleCloseConfirmationModal}
-        centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Confirm Booking</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <p>
+      <Dialog
+        open={showConfirmationModal}
+        onClose={() => setShowConfirmationModal(false)}>
+        <DialogTitle>Confirm Booking</DialogTitle>
+        <DialogContent>
+          <Typography>
             <strong>Movie:</strong> {movie.movieName}
-          </p>
-          <p>
+          </Typography>
+          <Typography>
             <strong>Show Date:</strong>{' '}
             {selectedShow
               ? format(new Date(selectedShow.showDate), 'MMMM dd, yyyy')
               : ''}
-          </p>
-          <p>
-            <strong>Show Time:</strong>{' '}
-            {selectedShow ? selectedShow.showTime : ''}
-          </p>
-          <p>
+          </Typography>
+          <Typography>
+            <strong>Show Time:</strong> {selectedShow?.showTime}
+          </Typography>
+          <Typography>
             <strong>Seats:</strong>{' '}
             {selectedSeats.map((seat) => seat.seatNo).join(', ')}
-          </p>
-          <p>
+          </Typography>
+          <Typography>
             <strong>Total Price:</strong> Rs.{' '}
             {selectedShow ? selectedShow.showPrice * selectedSeats.length : ''}
-          </p>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button
-            variant='secondary'
-            onClick={handleCloseConfirmationModal}>
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowConfirmationModal(false)}>
             Cancel
           </Button>
           <Button
-            variant='primary'
-            onClick={handleProceedToPayment}>
+            onClick={handleProceedToPayment}
+            variant='contained'>
             Pay with Khalti
           </Button>
-        </Modal.Footer>
-      </Modal>
-    </div>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
 };
 

@@ -1,26 +1,33 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { toast } from "react-toastify";
-import { getSingleprofileApi, updateProfileApi } from "../../apis/Api";
-import "bootstrap/dist/css/bootstrap.min.css";
-import "./Profile.css";
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Container,
+  TextField,
+  Typography,
+} from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { getSingleprofileApi, updateProfileApi } from '../../apis/Api';
 
 const Profile = () => {
   const { id } = useParams();
-  const [username, setUsername] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem("user"));
+    const storedUser = JSON.parse(localStorage.getItem('user'));
     setUser(storedUser);
-    
+
     getSingleprofileApi()
       .then((res) => {
-        console.log("API response:", res.data);
+        console.log('API response:', res.data);
         const { username, phoneNumber, email, password } = res.data.user;
         setUsername(username);
         setPhoneNumber(phoneNumber);
@@ -46,83 +53,82 @@ const Profile = () => {
         if (error.response) {
           toast.error(error.response.data.message);
         } else {
-          toast.error("An error occurred");
+          toast.error('An error occurred');
         }
       });
   };
 
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
-
   if (!user) {
-    return <div className="loading">Loading...</div>;
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+        }}>
+        <Typography>Loading...</Typography>
+      </Box>
+    );
   }
 
   return (
-    <div className="profile-container">
-      <div className="profile-card">
-        <h2 className="profile-title">Edit Profile</h2>
-        <form onSubmit={handleUpdate}>
-          <div className="form-group">
-            <label htmlFor="username">Username</label>
-            <input
-              id="username"
+    <Container
+      maxWidth='sm'
+      sx={{ mt: 10, mb: 4 }}>
+      <Card>
+        <CardContent>
+          <Typography
+            variant='h5'
+            component='h2'
+            gutterBottom>
+            Edit Profile
+          </Typography>
+          <Box
+            component='form'
+            onSubmit={handleUpdate}
+            sx={{ mt: 2 }}>
+            <TextField
+              fullWidth
+              id='username'
+              label='Username'
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              type="text"
-              className="form-control"
-              placeholder="Enter username"
+              margin='normal'
+              variant='outlined'
             />
-          </div>
-          <div className="form-group">
-            <label htmlFor="phoneNumber">Phone Number</label>
-            <input
-              id="phoneNumber"
+            <TextField
+              fullWidth
+              id='phoneNumber'
+              label='Phone Number'
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
-              type="text"
-              className="form-control"
-              placeholder="Enter phone number"
+              margin='normal'
+              variant='outlined'
             />
-          </div>
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
-            <input
-              id="email"
+            <TextField
+              fullWidth
+              id='email'
+              label='Email'
+              type='email'
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              type="email"
-              className="form-control"
-              placeholder="Enter email"
+              margin='normal'
+              variant='outlined'
             />
-          </div>
-          {/* <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <div className="password-input-wrapper">
-              <input
-                id="password"
-                value={password}
-                type={showPassword ? "text" : "password"}
-                className="form-control"
-                placeholder="Password"
-                readOnly
-              />
-              <button
-                type="button"
-                className="password-toggle"
-                onClick={togglePasswordVisibility}
-              >
-                {showPassword ? "👁️" : "👁️‍🗨️"}
-              </button>
-            </div>
-          </div> */}
-          <button type="submit" className="btn btn-primary profile-button">
-            Save Profile
-          </button>
-        </form>
-      </div>
-    </div>
+
+            <Button
+              type='submit'
+              fullWidth
+              variant='contained'
+              color='primary'
+              sx={{ mt: 3, mb: 2 }}>
+              Save Profile
+            </Button>
+          </Box>
+        </CardContent>
+      </Card>
+    </Container>
   );
 };
 

@@ -1,4 +1,24 @@
-import 'bootstrap/dist/css/bootstrap.min.css';
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  Typography,
+} from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -8,68 +28,70 @@ import {
   deleteMovieApi,
   getAllMoviesApi,
 } from '../../../apis/Api';
-import './MovieTicketingAdminPanel.css';
+import AdminNavbar from '../../../components/AdminNavbar';
+
 const MovieManagement = () => {
   const [movies, setMovies] = useState([]);
+  const [openAddMovie, setOpenAddMovie] = useState(false);
+  const [openAddShow, setOpenAddShow] = useState(false);
+  const [movieForShow, setMovieForShow] = useState(null);
+
+  const [formData, setFormData] = useState({
+    movieName: '',
+    movieGenre: '',
+    movieDetails: '',
+    movieRated: '',
+    movieDuration: '',
+    moviePosterImage: null,
+    previewPosterImage: null,
+  });
+
+  const [showData, setShowData] = useState({
+    showDate: '',
+    showTime: '',
+    showPrice: 0,
+  });
 
   useEffect(() => {
     getAllMoviesApi()
-      .then((res) => {
-        setMovies(res.data.movies);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+      .then((res) => setMovies(res.data.movies))
+      .catch((error) => console.log(error));
   }, []);
-  const [movieName, setMovieName] = useState('');
-  const [movieGenre, setMovieGenre] = useState('');
-  const [movieDetails, setMovieDetails] = useState('');
-  const [movieRated, setMovieRated] = useState('');
-  const [movieDuration, setMovieDuration] = useState('');
-  const [moviePosterImage, setMoviePosterImage] = useState(null);
-  const [previewPosterImage, setPreviewPosterImage] = useState(null);
-  const [movieForShow, setMovieForShow] = useState('');
-  const [showModal, setShowModal] = useState(false);
-  const [showPrice, setShowPrice] = useState(0);
-  const [showTime, setShowTime] = useState('');
-  const [showDate, setShowDate] = useState('');
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handlePosterImage = (event) => {
     const file = event.target.files[0];
-    setMoviePosterImage(file);
-    setPreviewPosterImage(URL.createObjectURL(file));
+    setFormData((prev) => ({
+      ...prev,
+      moviePosterImage: file,
+      previewPosterImage: URL.createObjectURL(file),
+    }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const formDataToSend = new FormData();
+    Object.keys(formData).forEach((key) => {
+      if (key !== 'previewPosterImage') {
+        formDataToSend.append(key, formData[key]);
+      }
+    });
 
-    console.log(moviePosterImage);
-
-    const formData = new FormData();
-    formData.append('movieName', movieName);
-    formData.append('movieGenre', movieGenre);
-    formData.append('movieDetails', movieDetails);
-    formData.append('movieRated', movieRated);
-    formData.append('movieDuration', movieDuration);
-    formData.append('moviePosterImage', moviePosterImage);
-
-    createMovieApi(formData)
+    createMovieApi(formDataToSend)
       .then((res) => {
         if (res.status === 201) {
           toast.success(res.data.message);
-
+          setOpenAddMovie(false);
           window.location.reload();
         }
       })
       .catch((error) => {
-        if (error.response) {
-          if (error.response.status === 400) {
-            toast.warning(error.response.data.message);
-          } else if (error.response.status === 500) {
-            toast.error(error.response.data.message);
-          } else {
-            toast.error('Something went wrong!!');
-          }
+        if (error.response?.status === 400) {
+          toast.warning(error.response.data.message);
         } else {
           toast.error('Something went wrong!');
         }
@@ -77,8 +99,7 @@ const MovieManagement = () => {
   };
 
   const handleDelete = (id) => {
-    const confirmDialog = window.confirm('Are you sure you want to delete?');
-    if (confirmDialog) {
+    if (window.confirm('Are you sure you want to delete?')) {
       deleteMovieApi(id)
         .then((res) => {
           if (res.status === 201) {
@@ -87,296 +108,276 @@ const MovieManagement = () => {
           }
         })
         .catch((error) => {
-          if (error.response.status === 500) {
+          if (error.response?.status === 500) {
             toast.error(error.response.data.message);
           }
         });
     }
   };
 
-  const handleShow = (movie) => {
-    setMovieForShow(movie);
-    setShowModal(true);
-  };
-
   const handleAddShow = (e) => {
     e.preventDefault();
-
     const data = {
-      showDate,
-      showTime,
-      price: showPrice,
+      ...showData,
       movieId: movieForShow._id,
     };
-
-    console.log(data);
 
     addShowsApi(data)
       .then((res) => {
         toast.success(res.data.message);
+        setOpenAddShow(false);
         window.location.reload();
       })
       .catch((err) => {
-        if (err.response) {
-          toast.error(err.response.data.message);
-        } else {
-          toast.error('Something went wrong');
-        }
+        toast.error(err.response?.data.message || 'Something went wrong');
       });
   };
 
   return (
-    <>
-      <div className='container mt-5 py-5'>
-        <div className='d-flex justify-content-between align-items-center'>
-          <h3 className='fw-bold'>Movie Ticketing Admin Panel</h3>
-          <button
-            type='button'
-            className='btn btn-danger'
-            data-bs-toggle='modal'
-            data-bs-target='#addMovieModal'>
+    <Box sx={{ display: 'flex' }}>
+      <AdminNavbar />
+      <Box
+        component='main'
+        sx={{ flexGrow: 1, p: 2, ml: '' }}>
+        <Box
+          display='flex'
+          justifyContent='space-between'
+          alignItems='center'
+          mb={4}>
+          <Typography
+            variant='h4'
+            component='h1'
+            fontWeight='bold'>
+            Movie Ticketing Admin Panel
+          </Typography>
+          <Button
+            variant='contained'
+            color='primary'
+            onClick={() => setOpenAddMovie(true)}>
             Add Movie
-          </button>
-        </div>
+          </Button>
+        </Box>
 
-        <div
-          className='modal fade'
-          id='addMovieModal'
-          tabIndex='-1'
-          aria-labelledby='addMovieModalLabel'
-          aria-hidden='true'>
-          <div className='modal-dialog modal-lg'>
-            <div className='modal-content'>
-              <div className='modal-header'>
-                <h5
-                  className='modal-title'
-                  id='addMovieModalLabel'>
-                  Create a New Movie
-                </h5>
-                <button
-                  type='button'
-                  className='btn-close'
-                  data-bs-dismiss='modal'
-                  aria-label='Close'></button>
-              </div>
-              <div className='modal-body'>
-                <form onSubmit={handleSubmit}>
-                  <div className='mb-3'>
-                    <label className='form-label'>Movie Name</label>
-                    <input
-                      type='text'
-                      className='form-control'
-                      value={movieName}
-                      onChange={(e) => setMovieName(e.target.value)}
-                      placeholder='Enter Movie Name'
-                      required
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Movie Poster</TableCell>
+                <TableCell>Movie Name</TableCell>
+                <TableCell>Genre</TableCell>
+                <TableCell>Details</TableCell>
+                <TableCell>Rated</TableCell>
+                <TableCell>Duration</TableCell>
+                <TableCell>Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {movies.map((movie) => (
+                <TableRow key={movie._id}>
+                  <TableCell>
+                    <img
+                      src={`https://localhost:5000/movies/${movie.moviePosterImage}`}
+                      alt={movie.movieName}
+                      style={{ width: 40, height: 40, objectFit: 'cover' }}
                     />
-                  </div>
-                  <div className='mb-3'>
-                    <label className='form-label'>Movie Genre</label>
-                    <input
-                      type='text'
-                      className='form-control'
-                      value={movieGenre}
-                      onChange={(e) => setMovieGenre(e.target.value)}
-                      placeholder='Enter Movie Genre'
-                      required
-                    />
-                  </div>
-                  <div className='mb-3'>
-                    <label className='form-label'>Movie Details</label>
-                    <textarea
-                      className='form-control'
-                      value={movieDetails}
-                      onChange={(e) => setMovieDetails(e.target.value)}
-                      rows='3'
-                      placeholder='Enter Movie Details'
-                      required></textarea>
-                  </div>
-                  <div className='mb-3'>
-                    <label className='form-label'>Movie Rated</label>
-                    <select
-                      value={movieRated}
-                      onChange={(e) => setMovieRated(e.target.value)}
-                      className='form-control'>
-                      <option value='info'>Select Movie Rating</option>
-                      <option value='G'>G</option>
-                      <option value='PG'>PG</option>
-                      <option value='PG-13'>PG-13</option>
-                      <option value='R'>R</option>
-                      <option value='NR'>NR</option>
-                    </select>
-                  </div>
-                  <div className='mb-3'>
-                    <label className='form-label'>Movie Duration</label>
-                    <input
-                      type='text'
-                      className='form-control'
-                      value={movieDuration}
-                      onChange={(e) => setMovieDuration(e.target.value)}
-                      placeholder='Enter Movie Duration'
-                      required
-                    />
-                  </div>
-                  <div className='mb-3'>
-                    <label className='form-label'>Upload Movie Poster</label>
-                    <input
-                      type='file'
-                      className='form-control'
-                      onChange={handlePosterImage}
-                      required
-                    />
-                    {previewPosterImage && (
-                      <img
-                        src={previewPosterImage}
-                        alt='preview poster'
-                        className='img-fluid rounded mt-3'
-                      />
-                    )}
-                  </div>
-                  <div className='modal-footer'>
-                    <button
-                      type='button'
-                      className='btn btn-secondary'
-                      data-bs-dismiss='modal'>
-                      Close
-                    </button>
-                    <button
-                      type='submit'
-                      className='btn btn-primary'>
-                      Save changes
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
+                  </TableCell>
+                  <TableCell>{movie.movieName}</TableCell>
+                  <TableCell>{movie.movieGenre}</TableCell>
+                  <TableCell>{movie.movieDetails}</TableCell>
+                  <TableCell>{movie.movieRated}</TableCell>
+                  <TableCell>{movie.movieDuration}</TableCell>
+                  <TableCell>
+                    <Box
+                      display='flex'
+                      gap={1}>
+                      <Button
+                        component={Link}
+                        to={`/admin/update/${movie._id}`}
+                        variant='outlined'
+                        size='small'>
+                        Edit
+                      </Button>
+                      <Button
+                        onClick={() => handleDelete(movie._id)}
+                        variant='outlined'
+                        color='error'
+                        size='small'>
+                        Delete
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          setMovieForShow(movie);
+                          setOpenAddShow(true);
+                        }}
+                        variant='contained'
+                        color='primary'
+                        size='small'>
+                        Add Show
+                      </Button>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
 
-        {showModal && (
-          <div
-            className='modal fade show d-block'
-            tabIndex='-1'
-            aria-labelledby='addShowModalLabel'
-            aria-hidden='true'>
-            <div className='modal-dialog modal-dialog-centered modal-lg'>
-              <div className='modal-content'>
-                <div className='modal-header'>
-                  <h5
-                    className='modal-title'
-                    id='addShowModalLabel'>
-                    Add Show Details
-                  </h5>
-                  <button
-                    type='button'
-                    className='btn-close'
-                    onClick={() => setShowModal(false)}></button>
-                </div>
-                <div className='modal-body'>
-                  <form onSubmit={handleAddShow}>
-                    <div className='mb-3'>
-                      <label className='form-label'>Show Date</label>
-                      <input
-                        type='date'
-                        className='form-control'
-                        value={showDate}
-                        onChange={(e) => setShowDate(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className='mb-3'>
-                      <label className='form-label'>Show Time</label>
-                      <input
-                        type='time'
-                        className='form-control'
-                        value={showTime}
-                        onChange={(e) => setShowTime(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className='mb-3'>
-                      <label className='form-label'>Show Price</label>
-                      <input
-                        type='number'
-                        className='form-control'
-                        value={showPrice}
-                        onChange={(e) => setShowPrice(e.target.value)}
-                        placeholder='Enter Show Price'
-                        required
-                      />
-                    </div>
-                    <div className='modal-footer'>
-                      <button
-                        type='button'
-                        className='btn btn-secondary'
-                        onClick={() => setShowModal(false)}>
-                        Close
-                      </button>
-                      <button
-                        type='submit'
-                        className='btn btn-primary'>
-                        Save changes
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <table className='table table-striped mt-4'>
-          <thead className='table-dark'>
-            <tr>
-              <th>Movie Poster</th>
-              <th>Movie Name</th>
-              <th>Movie Genre</th>
-              <th>Movie Details</th>
-              <th>Movie Rated</th>
-              <th>Movie Duration</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {movies.map((singleMovie) => (
-              <tr key={singleMovie._id}>
-                <td>
+        {/* Add Movie Dialog */}
+        <Dialog
+          open={openAddMovie}
+          onClose={() => setOpenAddMovie(false)}
+          maxWidth='md'
+          fullWidth>
+          <DialogTitle>Create a New Movie</DialogTitle>
+          <DialogContent>
+            <Box
+              component='form'
+              onSubmit={handleSubmit}
+              sx={{ mt: 2 }}>
+              <TextField
+                fullWidth
+                label='Movie Name'
+                name='movieName'
+                value={formData.movieName}
+                onChange={handleInputChange}
+                margin='normal'
+                required
+              />
+              <TextField
+                fullWidth
+                label='Movie Genre'
+                name='movieGenre'
+                value={formData.movieGenre}
+                onChange={handleInputChange}
+                margin='normal'
+                required
+              />
+              <TextField
+                fullWidth
+                label='Movie Details'
+                name='movieDetails'
+                value={formData.movieDetails}
+                onChange={handleInputChange}
+                margin='normal'
+                multiline
+                rows={3}
+                required
+              />
+              <FormControl
+                fullWidth
+                margin='normal'>
+                <InputLabel>Movie Rating</InputLabel>
+                <Select
+                  name='movieRated'
+                  value={formData.movieRated}
+                  onChange={handleInputChange}
+                  required>
+                  <MenuItem value='G'>G</MenuItem>
+                  <MenuItem value='PG'>PG</MenuItem>
+                  <MenuItem value='PG-13'>PG-13</MenuItem>
+                  <MenuItem value='R'>R</MenuItem>
+                  <MenuItem value='NR'>NR</MenuItem>
+                </Select>
+              </FormControl>
+              <TextField
+                fullWidth
+                label='Movie Duration'
+                name='movieDuration'
+                value={formData.movieDuration}
+                onChange={handleInputChange}
+                margin='normal'
+                required
+              />
+              <TextField
+                fullWidth
+                type='file'
+                onChange={handlePosterImage}
+                margin='normal'
+                required
+                InputLabelProps={{ shrink: true }}
+              />
+              {formData.previewPosterImage && (
+                <Box mt={2}>
                   <img
-                    width='40px'
-                    height='40px'
-                    src={`https://localhost:5000/movies/${singleMovie.moviePosterImage}`}
-                    alt={singleMovie.movieName}
-                    className='img-thumbnail'
+                    src={formData.previewPosterImage}
+                    alt='preview'
+                    style={{ maxWidth: '100%', maxHeight: 200 }}
                   />
-                </td>
-                <td>{singleMovie.movieName}</td>
-                <td>{singleMovie.movieGenre}</td>
-                <td>{singleMovie.movieDetails}</td>
-                <td>{singleMovie.movieRated}</td>
-                <td>{singleMovie.movieDuration}</td>
-                <td>
-                  <Link
-                    to={`/admin/update/${singleMovie._id}`}
-                    className='btn btn-primary btn-sm me-2'>
-                    Edit
-                  </Link>
-                  <button
-                    onClick={() => handleDelete(singleMovie._id)}
-                    className='btn btn-danger btn-sm'>
-                    Delete
-                  </button>
-                  <button
-                    onClick={() => handleShow(singleMovie)}
-                    className='btn btn-danger btn-sm'>
-                    Add Show
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </>
+                </Box>
+              )}
+              <DialogActions>
+                <Button onClick={() => setOpenAddMovie(false)}>Cancel</Button>
+                <Button
+                  type='submit'
+                  variant='contained'>
+                  Save
+                </Button>
+              </DialogActions>
+            </Box>
+          </DialogContent>
+        </Dialog>
+
+        {/* Add Show Dialog */}
+        <Dialog
+          open={openAddShow}
+          onClose={() => setOpenAddShow(false)}>
+          <DialogTitle>Add Show Details</DialogTitle>
+          <DialogContent>
+            <Box
+              component='form'
+              onSubmit={handleAddShow}
+              sx={{ mt: 2 }}>
+              <TextField
+                fullWidth
+                type='date'
+                label='Show Date'
+                value={showData.showDate}
+                onChange={(e) =>
+                  setShowData((prev) => ({ ...prev, showDate: e.target.value }))
+                }
+                margin='normal'
+                required
+                InputLabelProps={{ shrink: true }}
+              />
+              <TextField
+                fullWidth
+                type='time'
+                label='Show Time'
+                value={showData.showTime}
+                onChange={(e) =>
+                  setShowData((prev) => ({ ...prev, showTime: e.target.value }))
+                }
+                margin='normal'
+                required
+                InputLabelProps={{ shrink: true }}
+              />
+              <TextField
+                fullWidth
+                type='number'
+                label='Show Price'
+                value={showData.showPrice}
+                onChange={(e) =>
+                  setShowData((prev) => ({
+                    ...prev,
+                    showPrice: e.target.value,
+                  }))
+                }
+                margin='normal'
+                required
+              />
+              <DialogActions>
+                <Button onClick={() => setOpenAddShow(false)}>Cancel</Button>
+                <Button
+                  type='submit'
+                  variant='contained'>
+                  Save
+                </Button>
+              </DialogActions>
+            </Box>
+          </DialogContent>
+        </Dialog>
+      </Box>
+    </Box>
   );
 };
 
