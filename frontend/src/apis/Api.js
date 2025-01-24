@@ -103,8 +103,8 @@ export const bookTicketsApi = (data) =>
   Api.post('/api/booking/create', data, jsonConfig);
 
 // get a ll bookings api
-export const getAllBookingsApi = (data) =>
-  Api.get('api/booking/get_all_bookings', data, config);
+export const getAllBookingsApi = () =>
+  Api.get('api/booking/get_all_bookings', config);
 
 export const getBookingsByUserApi = () =>
   Api.get('api/booking/get_bookings_by_user', config);
@@ -136,3 +136,6 @@ export const contactUs = (data) =>
 
 // get contact us message API
 export const getContactUs = () => Api.get('/api/contact/get_contact', config);
+
+// get_all_logs
+export const getAllLogs = () => Api.get('/api/admin/get_all_logs', config);

@@ -15,6 +15,7 @@ import AboutUs from './pages/about_us/AboutUs';
 import AdminDashboard from './pages/admin/admin_dashboard/AdminDashboard';
 import BookingManagement from './pages/admin/booking_management/BookingManagement';
 import CustomerManagement from './pages/admin/customer_management/CustomerManagament';
+import LogManagement from './pages/admin/LogManagement/LogManagement';
 import MovieManagement from './pages/admin/movie_managment/MovieManagement';
 import ShowManagement from './pages/admin/shows/ShowManagement';
 import UpdateMovie from './pages/admin/update_movie/UpdateMovie';
@@ -138,6 +139,10 @@ function App() {
                   <Route
                     path='barChart'
                     element={<BarChart />}
+                  />
+                  <Route
+                    path='activityLogs'
+                    element={<LogManagement />}
                   />
                 </Routes>
               </ProtectedRoute>
