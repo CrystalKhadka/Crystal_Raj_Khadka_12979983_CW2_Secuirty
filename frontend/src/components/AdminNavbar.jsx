@@ -1,30 +1,61 @@
-// AdminNavbar.jsx
 import {
   ConfirmationNumber,
   Dashboard,
   ExitToApp,
   Feedback,
+  LocalActivity,
   Movie,
   People,
   TheaterComedy,
 } from '@mui/icons-material';
 import {
-  Box,
   Divider,
   Drawer,
   List,
-  ListItem,
+  ListItemButton,
   ListItemIcon,
   ListItemText,
+  Stack,
   Typography,
 } from '@mui/material';
-import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+
+const DRAWER_WIDTH = 280;
+
+const menuItems = [
+  { text: 'Dashboard', icon: <Dashboard />, path: '/admin/dashboard' },
+  {
+    text: 'Movies Management',
+    icon: <Movie />,
+    path: '/admin/movieManagement',
+  },
+  {
+    text: 'Shows Management',
+    icon: <TheaterComedy />,
+    path: '/admin/showManagement',
+  },
+  {
+    text: 'Bookings Management',
+    icon: <ConfirmationNumber />,
+    path: '/admin/bookingsManagement',
+  },
+  {
+    text: 'Customers Management',
+    icon: <People />,
+    path: '/admin/customerManagement',
+  },
+  { text: 'User Feedbacks', icon: <Feedback />, path: '/admin/userFeedbacks' },
+  // activityLogs
+  {
+    text: 'Log Management',
+    icon: <LocalActivity />,
+    path: '/admin/activityLogs',
+  },
+];
 
 const AdminNavbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [anchorEl, setAnchorEl] = React.useState(null);
   const admin = JSON.parse(localStorage.getItem('user'));
 
   const handleLogout = () => {
@@ -33,99 +64,83 @@ const AdminNavbar = () => {
     navigate('/login');
   };
 
-  const menuItems = [
-    { text: 'Dashboard', icon: <Dashboard />, path: '/admin/dashboard' },
-    {
-      text: 'Movies Management',
-      icon: <Movie />,
-      path: '/admin/movieManagement',
-    },
-    {
-      text: 'Shows Management',
-      icon: <TheaterComedy />,
-      path: '/admin/showManagement',
-    },
-    {
-      text: 'Bookings Management',
-      icon: <ConfirmationNumber />,
-      path: '/admin/bookingsManagement',
-    },
-    {
-      text: 'Customers Management',
-      icon: <People />,
-      path: '/admin/customerManagement',
-    },
-    {
-      text: 'User Feedbacks',
-      icon: <Feedback />,
-      path: '/admin/userFeedbacks',
-    },
-  ];
-
   return (
     <Drawer
       variant='permanent'
       sx={{
-        width: 240,
+        width: DRAWER_WIDTH,
         flexShrink: 0,
         '& .MuiDrawer-paper': {
-          width: 240,
+          width: DRAWER_WIDTH,
           boxSizing: 'border-box',
-          bgcolor: 'background.default',
+          bgcolor: 'background.paper',
+          borderRight: 1,
+          borderColor: 'divider',
         },
       }}>
-      <Box sx={{ p: 2 }}>
-        <Typography
-          variant='h6'
-          sx={{ fontWeight: 'bold' }}>
-          Admin Panel
-        </Typography>
-        <Typography
-          variant='subtitle2'
-          color='text.secondary'>
-          Welcome, {admin?.username}
-        </Typography>
-      </Box>
-      <Divider />
-      <List>
-        {menuItems.map((item) => (
-          <ListItem
-            button
-            key={item.text}
-            onClick={() => navigate(item.path)}
-            selected={location.pathname === item.path}
-            sx={{
-              '&.Mui-selected': {
-                bgcolor: 'primary.main',
-                color: 'white',
-                '&:hover': {
-                  bgcolor: 'primary.dark',
-                },
-                '& .MuiListItemIcon-root': {
-                  color: 'white',
-                },
-              },
-            }}>
-            <ListItemIcon
+      <Stack sx={{ height: '100%' }}>
+        <Stack sx={{ p: 3, gap: 1 }}>
+          <Typography
+            variant='h6'
+            fontWeight='bold'>
+            Admin Panel
+          </Typography>
+          <Typography
+            variant='body2'
+            color='text.secondary'>
+            Welcome, {admin?.username}
+          </Typography>
+        </Stack>
+
+        <Divider />
+
+        <List sx={{ flexGrow: 1, px: 2 }}>
+          {menuItems.map((item) => (
+            <ListItemButton
+              key={item.text}
+              onClick={() => navigate(item.path)}
+              selected={location.pathname === item.path}
               sx={{
-                color: location.pathname === item.path ? 'white' : 'inherit',
+                my: 0.5,
+                borderRadius: 1,
+                '&.Mui-selected': {
+                  bgcolor: 'primary.main',
+                  color: 'primary.contrastText',
+                  '&:hover': {
+                    bgcolor: 'primary.dark',
+                  },
+                  '& .MuiListItemIcon-root': {
+                    color: 'inherit',
+                  },
+                },
               }}>
-              {item.icon}
+              <ListItemIcon
+                sx={{
+                  color:
+                    location.pathname === item.path
+                      ? 'inherit'
+                      : 'text.primary',
+                }}>
+                {item.icon}
+              </ListItemIcon>
+              <ListItemText primary={item.text} />
+            </ListItemButton>
+          ))}
+        </List>
+
+        <Divider />
+
+        <List sx={{ px: 2, pb: 2 }}>
+          <ListItemButton
+            onClick={handleLogout}
+            sx={{ borderRadius: 1 }}>
+            <ListItemIcon>
+              <ExitToApp />
             </ListItemIcon>
-            <ListItemText primary={item.text} />
-          </ListItem>
-        ))}
-      </List>
-      <Box sx={{ mt: 'auto', p: 2 }}>
-        <ListItem
-          button
-          onClick={handleLogout}>
-          <ListItemIcon>
-            <ExitToApp />
-          </ListItemIcon>
-          <ListItemText primary='Logout' />
-        </ListItem>
-      </Box>
+            <ListItemText primary='Logout' />
+          </ListItemButton>
+        </List>
+      </Stack>
     </Drawer>
   );
 };

@@ -28,7 +28,6 @@ import {
   deleteMovieApi,
   getAllMoviesApi,
 } from '../../../apis/Api';
-import AdminNavbar from '../../../components/AdminNavbar';
 
 const MovieManagement = () => {
   const [movies, setMovies] = useState([]);
@@ -135,10 +134,9 @@ const MovieManagement = () => {
 
   return (
     <Box sx={{ display: 'flex' }}>
-      <AdminNavbar />
       <Box
         component='main'
-        sx={{ flexGrow: 1, p: 2, ml: '' }}>
+        sx={{ flexGrow: 1, p: 2 }}>
         <Box
           display='flex'
           justifyContent='space-between'

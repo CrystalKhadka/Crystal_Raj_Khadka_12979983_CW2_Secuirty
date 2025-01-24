@@ -1,13 +1,30 @@
-import React, { useEffect, useState } from "react";
-import { getContactUs } from "../../../apis/Api";
-import { toast } from "react-toastify";
-import "bootstrap/dist/css/bootstrap.min.css";
-import "bootstrap-icons/font/bootstrap-icons.css";
-import "./UserFeedbacks.css";
+import { Visibility as VisibilityIcon } from '@mui/icons-material';
+import {
+  Alert,
+  Box,
+  CircularProgress,
+  Container,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  IconButton,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
+} from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
+import { getContactUs } from '../../../apis/Api';
 
 const UserFeedbacks = () => {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedMessage, setSelectedMessage] = useState(null);
 
   useEffect(() => {
     fetchMessages();
@@ -18,60 +35,113 @@ const UserFeedbacks = () => {
       setLoading(true);
       const response = await getContactUs();
       setMessages(response.data.contacts || []);
-      setLoading(false);
     } catch (error) {
-      console.error("Error fetching messages:", error);
-      toast.error("Failed to load messages. Please try again later.");
+      console.error('Error fetching messages:', error);
+      toast.error('Failed to load messages. Please try again later.');
+    } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="container-fluid bg-light min-vh-100 py-5">
-      <div className="container">
-        <h1 className="text-center mb-4">User Feedbacks</h1>
-        <div className="card shadow-sm">
-          <div className="card-body">
-            {loading ? (
-              <div className="text-center">
-                <div className="spinner-border text-primary" role="status">
-                  <span className="visually-hidden">Loading...</span>
-                </div>
-              </div>
-            ) : messages.length === 0 ? (
-              <div className="alert alert-info">
-                No Feedback Messages Available
-              </div>
-            ) : (
-              <div className="table-responsive">
-                <table className="table table-hover">
-                  <thead className="table-light">
-                    <tr>
-                      <th>Name</th>
+    <Box sx={{ bgcolor: 'grey.50', minHeight: '100vh', py: 4 }}>
+      <Container maxWidth='lg'>
+        <Typography
+          variant='h4'
+          component='h1'
+          align='center'
+          gutterBottom>
+          User Feedbacks
+        </Typography>
 
-                      <th>Subject</th>
-                      <th>Message</th>
-                      
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {messages.map((message) => (
-                      <tr key={message._id}>
-                        <td>{message.name}</td>
+        <Paper
+          elevation={2}
+          sx={{ p: 3 }}>
+          {loading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+              <CircularProgress />
+            </Box>
+          ) : messages.length === 0 ? (
+            <Alert severity='info'>No Feedback Messages Available</Alert>
+          ) : (
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Name</TableCell>
+                    <TableCell>Subject</TableCell>
+                    <TableCell>Message</TableCell>
+                    <TableCell align='right'>Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {messages.map((message) => (
+                    <TableRow
+                      key={message._id}
+                      hover>
+                      <TableCell>{message.name}</TableCell>
+                      <TableCell>{message.subject}</TableCell>
+                      <TableCell>
+                        {message.message.substring(0, 50)}...
+                      </TableCell>
+                      <TableCell align='right'>
+                        <IconButton
+                          color='primary'
+                          size='small'
+                          onClick={() => setSelectedMessage(message)}>
+                          <VisibilityIcon />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </Paper>
 
-                        <td>{message.subject}</td>
-                        <td>{message.message.substring(0, 50)}...</td>
-                        
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
+        <Dialog
+          open={!!selectedMessage}
+          onClose={() => setSelectedMessage(null)}
+          maxWidth='sm'
+          fullWidth>
+          <DialogTitle>Feedback Details</DialogTitle>
+          <DialogContent dividers>
+            <Typography
+              variant='subtitle2'
+              color='text.secondary'
+              gutterBottom>
+              From
+            </Typography>
+            <Typography
+              variant='body1'
+              paragraph>
+              {selectedMessage?.name}
+            </Typography>
+
+            <Typography
+              variant='subtitle2'
+              color='text.secondary'
+              gutterBottom>
+              Subject
+            </Typography>
+            <Typography
+              variant='body1'
+              paragraph>
+              {selectedMessage?.subject}
+            </Typography>
+
+            <Typography
+              variant='subtitle2'
+              color='text.secondary'
+              gutterBottom>
+              Message
+            </Typography>
+            <Typography variant='body1'>{selectedMessage?.message}</Typography>
+          </DialogContent>
+        </Dialog>
+      </Container>
+    </Box>
   );
 };
 

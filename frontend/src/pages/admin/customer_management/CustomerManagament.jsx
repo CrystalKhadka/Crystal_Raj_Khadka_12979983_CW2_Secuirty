@@ -1,13 +1,39 @@
-import React, { useEffect, useState } from "react";
-import { getAllProfileApi, deleteProfileApi } from "../../../apis/Api";
-import { toast } from "react-toastify";
-import "bootstrap/dist/css/bootstrap.min.css";
-import "bootstrap-icons/font/bootstrap-icons.css";
+import {
+  Delete as DeleteIcon,
+  Edit as EditIcon,
+  Search as SearchIcon,
+} from '@mui/icons-material';
+import {
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  IconButton,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  Typography,
+} from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
+import { deleteProfileApi, getAllProfileApi } from '../../../apis/Api';
 
 const CustomerManagement = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
 
   useEffect(() => {
     fetchUsers();
@@ -21,32 +47,38 @@ const CustomerManagement = () => {
         setLoading(false);
       })
       .catch((error) => {
-        console.log(error);
-        toast.error("Failed to fetch users. Please try again later.");
+        console.error(error);
+        toast.error('Failed to fetch users. Please try again later.');
         setLoading(false);
       });
   };
 
-  const handleDelete = (id) => {
-    const confirmDialog = window.confirm(
-      "Are you sure you want to delete this user?"
-    );
-    if (confirmDialog) {
-      deleteProfileApi(id)
-        .then((res) => {
-          if (res.status === 201) {
-            toast.success(res.data.message);
-            setUsers(users.filter((user) => user._id !== id));
-          }
-        })
-        .catch((error) => {
-          if (error.response && error.response.status === 500) {
-            toast.error(error.response.data.message);
-          } else {
-            toast.error("Something went wrong. Please try again.");
-          }
-        });
-    }
+  const handleDeleteClick = (user) => {
+    setUserToDelete(user);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (!userToDelete) return;
+
+    deleteProfileApi(userToDelete._id)
+      .then((res) => {
+        if (res.status === 201) {
+          toast.success(res.data.message);
+          setUsers(users.filter((user) => user._id !== userToDelete._id));
+        }
+      })
+      .catch((error) => {
+        if (error.response?.status === 500) {
+          toast.error(error.response.data.message);
+        } else {
+          toast.error('Something went wrong. Please try again.');
+        }
+      })
+      .finally(() => {
+        setDeleteDialogOpen(false);
+        setUserToDelete(null);
+      });
   };
 
   const filteredUsers = users.filter(
@@ -57,66 +89,100 @@ const CustomerManagement = () => {
   );
 
   return (
-    <div className="container-fluid bg-light min-vh-100 py-5">
-      <div className="container">
-        <h1 className="text-center mb-4">Customer Management</h1>
-        <div className="card shadow-sm">
-          <div className="card-body">
-            <div className="d-flex justify-content-between align-items-center mb-4">
-              <input
-                type="text"
-                className="form-control w-50"
-                placeholder="Search by username, email, or phone..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            {loading ? (
-              <div className="text-center">
-                <div className="spinner-border text-primary" role="status">
-                  <span className="visually-hidden">Loading...</span>
-                </div>
-              </div>
-            ) : filteredUsers.length === 0 ? (
-              <div className="alert alert-info">No Users Available</div>
-            ) : (
-              <div className="table-responsive">
-                <table className="table table-hover">
-                  <thead className="table-light">
-                    <tr>
-                      <th>Username</th>
-                      <th>Email</th>
-                      <th>Phone Number</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredUsers.map((user) => (
-                      <tr key={user._id}>
-                        <td>{user.username}</td>
-                        <td>{user.email}</td>
-                        <td>{user.phoneNumber}</td>
-                        <td>
-                          <button className="btn btn-outline-primary btn-sm me-2">
-                            <i className="bi bi-pencil me-1"></i>Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(user._id)}
-                            className="btn btn-outline-danger btn-sm"
-                          >
-                            <i className="bi bi-trash me-1"></i>Delete
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
+    <Box sx={{ bgcolor: 'grey.50', minHeight: '100vh', py: 4 }}>
+      <Container maxWidth='lg'>
+        <Typography
+          variant='h4'
+          component='h1'
+          align='center'
+          gutterBottom>
+          Customer Management
+        </Typography>
+
+        <Paper
+          elevation={2}
+          sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', mb: 3 }}>
+            <TextField
+              fullWidth
+              variant='outlined'
+              placeholder='Search by username, email, or phone...'
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <SearchIcon sx={{ color: 'text.secondary', mr: 1 }} />
+                ),
+              }}
+              sx={{ maxWidth: 500 }}
+            />
+          </Box>
+
+          {loading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+              <CircularProgress />
+            </Box>
+          ) : filteredUsers.length === 0 ? (
+            <Alert severity='info'>No Users Available</Alert>
+          ) : (
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Username</TableCell>
+                    <TableCell>Email</TableCell>
+                    <TableCell>Phone Number</TableCell>
+                    <TableCell align='right'>Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {filteredUsers.map((user) => (
+                    <TableRow
+                      key={user._id}
+                      hover>
+                      <TableCell>{user.username}</TableCell>
+                      <TableCell>{user.email}</TableCell>
+                      <TableCell>{user.phoneNumber}</TableCell>
+                      <TableCell align='right'>
+                        <IconButton
+                          color='primary'
+                          size='small'
+                          sx={{ mr: 1 }}>
+                          <EditIcon />
+                        </IconButton>
+                        <IconButton
+                          color='error'
+                          size='small'
+                          onClick={() => handleDeleteClick(user)}>
+                          <DeleteIcon />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </Paper>
+
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={() => setDeleteDialogOpen(false)}>
+          <DialogTitle>Confirm Delete</DialogTitle>
+          <DialogContent>
+            Are you sure you want to delete {userToDelete?.username}?
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button
+              onClick={handleDeleteConfirm}
+              color='error'>
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Container>
+    </Box>
   );
 };
 
