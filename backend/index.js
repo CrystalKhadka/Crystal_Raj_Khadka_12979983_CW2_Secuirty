@@ -56,7 +56,7 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // Use Helmet middleware
-app.use(helmet());
+// app.use(helmet());
 
 // Enable file upload
 app.use(accessFormData());
