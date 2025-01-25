@@ -7,6 +7,7 @@ import {
   FormControl,
   InputLabel,
   MenuItem,
+  Pagination,
   Paper,
   Select,
   Table,
@@ -24,25 +25,36 @@ import { getAllLogsApi } from '../../../apis/Api';
 const LogManagement = () => {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [levelFilter, setLevelFilter] = useState('all');
-
-  useEffect(() => {
-    fetchLogs();
-  }, []);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
 
   const fetchLogs = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      getAllLogsApi().then((res) => {
-        const data = res.data?.logs || [];
-        setLogs(data);
-      });
-    } catch (error) {
-      console.error('Failed to fetch logs:', error);
+      const response = await getAllLogsApi(
+        page,
+        limit,
+        searchTerm,
+        levelFilter
+      );
+      setLogs(response.data.logs || []);
+      setTotalPages(response.data.totalPages || 1);
+    } catch (err) {
+      console.error('Error fetching logs:', err);
+      setError('Failed to fetch logs. Please try again.');
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchLogs();
+  }, [page, limit, searchTerm, levelFilter]);
 
   const getLevelColor = (level) => {
     switch (level) {
@@ -56,15 +68,6 @@ const LogManagement = () => {
         return 'default';
     }
   };
-
-  const filteredLogs = logs.filter((log) => {
-    const matchesSearch =
-      log.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      log.url?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      log.user?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesLevel = levelFilter === 'all' || log.level === levelFilter;
-    return matchesSearch && matchesLevel;
-  });
 
   return (
     <Container
@@ -105,11 +108,13 @@ const LogManagement = () => {
           </FormControl>
         </Box>
 
+        {error && <Alert severity='error'>{error}</Alert>}
+
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
             <CircularProgress />
           </Box>
-        ) : filteredLogs.length === 0 ? (
+        ) : logs.length === 0 ? (
           <Alert severity='info'>No logs found</Alert>
         ) : (
           <TableContainer>
@@ -126,7 +131,7 @@ const LogManagement = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filteredLogs.map((log) => (
+                {logs.map((log) => (
                   <TableRow
                     key={log._id}
                     hover>
@@ -151,6 +156,15 @@ const LogManagement = () => {
             </Table>
           </TableContainer>
         )}
+
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+          <Pagination
+            count={totalPages}
+            page={page}
+            onChange={(e, value) => setPage(value)}
+            color='primary'
+          />
+        </Box>
       </Paper>
     </Container>
   );

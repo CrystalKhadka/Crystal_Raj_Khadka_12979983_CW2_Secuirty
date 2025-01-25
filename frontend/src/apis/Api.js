@@ -83,7 +83,10 @@ export const initializeKhaltiApi = (data) =>
 export const contactUsApi = (data) => Api.post('/api/contact/create', data);
 export const getContactMessagesApi = () => Api.get('/api/contact/get_contact');
 export const getDashboardStatsApi = () => Api.get('/api/admin/dashboard_stats');
-export const getAllLogsApi = () => Api.get('/api/admin/get_all_logs');
+export const getAllLogsApi = (page, limit, searchTerm, filter) =>
+  Api.get(
+    `/api/admin/get_all_logs?page=${page}&limit=${limit}&searchTerm=${searchTerm}&filter=${filter}`
+  );
 
 // verify_register_otp
 export const verifyRegisterOtpApi = (data) =>
