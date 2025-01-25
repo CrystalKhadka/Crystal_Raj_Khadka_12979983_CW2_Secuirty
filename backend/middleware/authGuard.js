@@ -1,20 +1,14 @@
 const jwt = require('jsonwebtoken');
 const Log = require('../models/logModel'); // Import the Log model
+const cookieParser = require('cookie-parser');
 
 /**
- * Utility function to extract token from authorization header
- * @param {string} authHeader - The authorization header
+ * Utility function to extract token from cookies
+ * @param {object} cookies - The request cookies
  * @returns {string|null} - Extracted token or null
  */
-const extractToken = (authHeader) => {
-  if (!authHeader || typeof authHeader !== 'string') return null;
-
-  const parts = authHeader.split(' ');
-  if (parts.length === 2 && parts[0] === 'Bearer') {
-    return parts[1];
-  }
-
-  return null;
+const extractTokenFromCookies = (cookies) => {
+  return cookies?.token || null; // Replace 'token' with your cookie's key name if different
 };
 
 /**
@@ -32,9 +26,6 @@ const logActivity = async (logData) => {
 /**
  * Middleware to handle public routes
  * Logs request details to MongoDB.
- * @param {object} req - Request object
- * @param {object} res - Response object
- * @param {function} next - Next middleware function
  */
 const publicGuard = async (req, res, next) => {
   await logActivity({
@@ -56,19 +47,15 @@ const publicGuard = async (req, res, next) => {
 /**
  * Middleware to validate authentication
  * Logs authentication activity to MongoDB.
- * @param {object} req - Request object
- * @param {object} res - Response object
- * @param {function} next - Next middleware function
  */
 const authGuard = async (req, res, next) => {
   try {
-    const authHeader = req.headers.authorization;
-    const token = extractToken(authHeader);
+    const token = extractTokenFromCookies(req.cookies);
 
     if (!token) {
       await logActivity({
         level: 'warn',
-        message: 'Authentication failed: missing or invalid token',
+        message: 'Authentication failed: missing token',
         method: req.method,
         url: req.originalUrl,
         user: 'guest',
@@ -77,7 +64,7 @@ const authGuard = async (req, res, next) => {
 
       return res.status(401).json({
         success: false,
-        message: 'Authorization token is missing or invalid',
+        message: 'Authorization token is missing',
       });
     }
 
@@ -118,19 +105,15 @@ const authGuard = async (req, res, next) => {
 /**
  * Middleware to validate admin access
  * Logs admin access activity to MongoDB.
- * @param {object} req - Request object
- * @param {object} res - Response object
- * @param {function} next - Next middleware function
  */
 const adminGuard = async (req, res, next) => {
   try {
-    const authHeader = req.headers.authorization;
-    const token = extractToken(authHeader);
+    const token = extractTokenFromCookies(req.cookies);
 
     if (!token) {
       await logActivity({
         level: 'warn',
-        message: 'Authorization failed: missing or invalid token',
+        message: 'Authorization failed: missing token',
         method: req.method,
         url: req.originalUrl,
         user: 'guest',
@@ -139,7 +122,7 @@ const adminGuard = async (req, res, next) => {
 
       return res.status(401).json({
         success: false,
-        message: 'Authorization token is missing or invalid',
+        message: 'Authorization token is missing',
       });
     }
 

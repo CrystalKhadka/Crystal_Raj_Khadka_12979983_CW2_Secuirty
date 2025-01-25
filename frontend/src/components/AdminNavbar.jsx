@@ -69,13 +69,13 @@ const AdminNavbar = () => {
         console.log(error);
       }
     };
-    fetchAdmin(); 
+    fetchAdmin();
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
-    navigate('/login');
+    document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+
+    navigate('/login', { replace: true });
   };
 
   return (

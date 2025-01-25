@@ -459,6 +459,10 @@ const getSingleProfile = async (req, res) => {
       });
     }
 
+    // check if user is rememberDevice
+    const device = req.headers['user-agent'];
+    const rememberDevice = user.rememberedDevices.includes(device);
+
     res.status(200).json({
       success: true,
       message: 'User fetched',
@@ -469,6 +473,7 @@ const getSingleProfile = async (req, res) => {
         password: 'Please update your password',
         _id: user._id,
         isAdmin: user.isAdmin,
+        rememberDevice: rememberDevice,
       },
     });
   } catch (error) {

@@ -8,6 +8,7 @@ const fs = require('fs');
 const accessFormData = require('express-fileupload');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
+const cookieParser = require('cookie-parser');
 // Load environment variables from .env file
 dotenv.config();
 
@@ -57,6 +58,9 @@ const limiter = rateLimit({
 
 // Use Helmet middleware
 // app.use(helmet());
+
+// apply cookie parser
+app.use(cookieParser()); // Enable cookie parsing
 
 // Enable file upload
 app.use(accessFormData());

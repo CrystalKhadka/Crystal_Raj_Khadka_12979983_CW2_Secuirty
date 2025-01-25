@@ -165,7 +165,7 @@ const Homepage = () => {
     );
   }
 
-  if (user.isAdmin) {
+  if (user?.isAdmin) {
     return (
       <Navigate
         to='/admin/dashboard'
