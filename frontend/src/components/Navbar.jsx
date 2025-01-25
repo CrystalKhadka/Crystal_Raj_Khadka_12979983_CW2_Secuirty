@@ -17,8 +17,9 @@ import {
   useTheme,
 } from '@mui/material';
 import { googleLogout } from '@react-oauth/google';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { getSingleProfileApi } from '../apis/Api';
 
 const Navbar = () => {
   const location = useLocation();
@@ -27,15 +28,23 @@ const Navbar = () => {
 
   const [anchorEl, setAnchorEl] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  const user = JSON.parse(localStorage.getItem('user'));
-
+  const [user, setUser] = useState(null);
   const handleLogout = () => {
     localStorage.removeItem('user');
     localStorage.removeItem('token');
     googleLogout();
     window.location.href = '/login';
   };
+
+  useEffect(() => {
+    getSingleProfileApi()
+      .then((res) => {
+        setUser(res.data.user);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }, []);
 
   const handleProfileMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);

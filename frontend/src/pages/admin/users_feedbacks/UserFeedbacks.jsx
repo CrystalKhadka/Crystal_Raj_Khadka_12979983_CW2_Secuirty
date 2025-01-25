@@ -19,7 +19,7 @@ import {
 } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
-import { getContactUs } from '../../../apis/Api';
+import { getContactMessagesApi } from '../../../apis/Api';
 
 const UserFeedbacks = () => {
   const [messages, setMessages] = useState([]);
@@ -33,7 +33,7 @@ const UserFeedbacks = () => {
   const fetchMessages = async () => {
     try {
       setLoading(true);
-      const response = await getContactUs();
+      const response = await getContactMessagesApi();
       setMessages(response.data.contacts || []);
     } catch (error) {
       console.error('Error fetching messages:', error);

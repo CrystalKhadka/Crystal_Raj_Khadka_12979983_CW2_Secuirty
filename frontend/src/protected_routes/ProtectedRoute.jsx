@@ -8,6 +8,7 @@ import {
 } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
+import { getSingleProfileApi } from '../apis/Api';
 import AdminNavbar from '../components/AdminNavbar';
 import Navbar from '../components/Navbar';
 
@@ -64,7 +65,8 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const userData = JSON.parse(localStorage.getItem('user'));
+        const response = await getSingleProfileApi();
+        const userData = response.data.user;
         setUser(userData);
       } catch (error) {
         setError('Authentication failed. Please try logging in again.');
@@ -92,6 +94,16 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
       <Navigate
         to='/login'
         state={{ from: location }}
+        replace
+      />
+    );
+  }
+
+  // Redirect admin to /admin/ if not already there
+  if (user.isAdmin && !location.pathname.startsWith('/admin')) {
+    return (
+      <Navigate
+        to='/admin/'
         replace
       />
     );

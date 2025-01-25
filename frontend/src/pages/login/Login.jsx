@@ -32,7 +32,10 @@ import {
   forgotPasswordApi,
   loginUserApi,
   resetPasswordApi,
+  verifyLoginOtpApi,
+  verifyRegisterOtpApi,
 } from '../../apis/Api';
+import VerificationModal from '../../components/VerificationModel';
 
 const Login = () => {
   const theme = useTheme();
@@ -48,6 +51,35 @@ const Login = () => {
   const [isSentOtp, setIsSentOtp] = useState(false);
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [openVerificationModal, setOpenVerificationModal] = useState(false);
+  const [openRegisterVerificationModal, setOpenRegisterVerificationModal] =
+    useState(false);
+
+  const handleVerification = (otpString) => {
+    console.log(otpString);
+    verifyLoginOtpApi({ email, otp: otpString })
+      .then((res) => {
+        toast.success(res.data.message);
+        document.cookie = `token=${res.data.token}`;
+        window.location.href = '/homepage';
+      })
+      .catch((err) => {
+        toast.error(err.response?.data?.message || 'Verification failed');
+      });
+  };
+
+  const handleRegisterVerification = (otpString) => {
+    console.log(otpString);
+    verifyRegisterOtpApi({ email, otp: otpString })
+      .then((res) => {
+        toast.success(res.data.message);
+        document.cookie = `token=${res.data.token}`;
+        window.location.href = '/homepage';
+      })
+      .catch((err) => {
+        toast.error(err.response?.data?.message || 'Verification failed');
+      });
+  };
 
   const validate = () => {
     let isValid = true;
@@ -122,15 +154,15 @@ const Login = () => {
     setIsLoading(true);
     try {
       const res = await loginUserApi({ email, password });
-      if (!res.data.success) {
-        toast.error(res.data.message);
+      if (res.data.registerOtpRequired) {
+        setOpenRegisterVerificationModal(true);
+      } else if (res.data.otpRequired) {
+        setOpenVerificationModal(true);
       } else {
         toast.success(res.data.message);
-        localStorage.setItem('token', res.data.token);
-        localStorage.setItem('user', JSON.stringify(res.data.userData));
-        window.location.href = res.data.userData.isAdmin
-          ? '/admin/dashboard'
-          : '/Homepage';
+        // set cookie
+        document.cookie = `token=${res.data.token}`;
+        window.location.href = '/homepage';
       }
     } catch (err) {
       toast.error('Login failed');
@@ -374,6 +406,22 @@ const Login = () => {
           </Card>
         </Box>
       </Fade>
+
+      <VerificationModal
+        open={openRegisterVerificationModal}
+        onClose={() => setOpenRegisterVerificationModal(false)}
+        isRegistration={true} // or false for login
+        onVerify={handleRegisterVerification}
+        email={email}
+      />
+
+      <VerificationModal
+        open={openVerificationModal}
+        onClose={() => setOpenVerificationModal(false)}
+        isRegistration={false} // or false for login
+        onVerify={handleVerification}
+        email={email}
+      />
 
       <Dialog
         open={showForgotPasswordModal}

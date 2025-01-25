@@ -29,5 +29,15 @@ router.put('/update_profile', authGuard, userController.updateUser);
 //generate token
 router.post('/generate_token', publicGuard, userController.getToken);
 
+// verifyRegisterOTP
+router.put(
+  '/verify_register_otp',
+  publicGuard,
+  userController.verifyRegisterOTP
+);
+
+// verifyLoginOTP
+router.put('/verify_login_otp', publicGuard, userController.verifyLoginOTP);
+
 // exporting the router
 module.exports = router;

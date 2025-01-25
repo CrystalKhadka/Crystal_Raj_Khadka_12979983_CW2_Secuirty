@@ -53,7 +53,7 @@ const limiter = rateLimit({
 });
 
 // Apply the rate limit to all routes
-app.use(limiter);
+// app.use(limiter);
 
 // Use Helmet middleware
 // app.use(helmet());

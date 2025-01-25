@@ -23,7 +23,8 @@ import {
 } from '@mui/material';
 import { debounce } from 'lodash';
 import React, { useCallback, useEffect, useState } from 'react';
-import { getMovieCount, pagination } from '../../apis/Api';
+import { Navigate } from 'react-router-dom';
+import { getMovieCount, getSingleProfileApi, pagination } from '../../apis/Api';
 import MovieCard from '../../components/MovieCard';
 
 const carouselImages = [
@@ -53,6 +54,7 @@ const Homepage = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [showError, setShowError] = useState(false);
+  const [user, setUser] = useState(null);
   const maxSteps = carouselImages.length;
 
   const limit = isMobile ? 2 : 3;
@@ -88,6 +90,14 @@ const Homepage = () => {
   }, [limit, page]);
 
   useEffect(() => {
+    getSingleProfileApi()
+      .then((response) => {
+        setUser(response.data.user);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+
     fetchData();
   }, [fetchData]);
 
@@ -152,6 +162,15 @@ const Homepage = () => {
           {error}
         </Alert>
       </Container>
+    );
+  }
+
+  if (user.isAdmin) {
+    return (
+      <Navigate
+        to='/admin/dashboard'
+        replace={true}
+      />
     );
   }
 

@@ -1,141 +1,94 @@
 import axios from 'axios';
 
-// Creating backend config
+// Function to extract token from cookies
+const getTokenFromCookies = () => {
+  const cookie = document.cookie
+    .split('; ')
+    .find((row) => row.startsWith('token='));
+  return cookie ? cookie.split('=')[1] : null;
+};
+
+// Create an Axios instance
 const Api = axios.create({
-  baseURL: 'https://localhost:5000',
-  withCredentials: true,
-  headers: {
-    'Content-Type': 'multipart/form-data',
-  },
+  baseURL: process.env.REACT_APP_API_URL || 'https://localhost:5000', // Use environment variable for base URL
+  withCredentials: true, // Include cookies in requests
 });
 
-const config = {
-  headers: {
-    authorization: `Bearer ${localStorage.getItem('token')}`,
+// Add request interceptor to dynamically add Authorization header
+Api.interceptors.request.use(
+  (config) => {
+    const token = getTokenFromCookies();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
   },
-};
+  (error) => Promise.reject(error)
+);
 
-const jsonConfig = {
-  headers: {
-    authorization: `Bearer ${localStorage.getItem('token')}`,
-    'Content-Type': 'application/json',
-  },
-};
+// Add response interceptor for global error handling
+Api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.error('API Error:', error.response || error.message);
+    return Promise.reject(error);
+  }
+);
 
-// Register API
+// API Endpoints
 export const registerUserApi = (data) => Api.post('/api/user/create', data);
-
-// Login API
 export const loginUserApi = (data) => Api.post('/api/user/login', data);
-
-// Create Movie API
-export const createMovieApi = (data) =>
-  Api.post('/api/movie/create', data, config);
-
-// Fetch all Movies API
-export const getAllMoviesApi = () =>
-  Api.get('/api/movie/get_all_movies', config);
-
-// Fetch single Movie by ID API
+export const createMovieApi = (data) => Api.post('/api/movie/create', data);
+export const getAllMoviesApi = () => Api.get('/api/movie/get_all_movies');
 export const getSingleMovieApi = (id) =>
-  Api.get(`/api/movie/get_single_movie/${id}`, config);
-
-// Delete Movie by ID API
+  Api.get(`/api/movie/get_single_movie/${id}`);
 export const deleteMovieApi = (id) =>
-  Api.delete(`/api/movie/delete_movie/${id}`, config);
-
-// Update Movie by ID API
+  Api.delete(`/api/movie/delete_movie/${id}`);
 export const updateMovieApi = (id, data) =>
-  Api.put(`/api/movie/update_movie/${id}`, data, config);
-
-// Pagination
+  Api.put(`/api/movie/update_movie/${id}`, data);
 export const pagination = (page, limit) =>
-  Api.get(`/api/movie/pagination/?page=${page}&limit=${limit}`, config);
-
-export const getMovieCount = () =>
-  Api.get('/api/movie/get_movies_count', config);
-
-// Forgot password API
+  Api.get(`/api/movie/pagination/?page=${page}&limit=${limit}`);
+export const getMovieCount = () => Api.get('/api/movie/get_movies_count');
+export const buyTicketsApi = (id, data) =>
+  Api.post(`/api/movie/buy_tickets/${id}`, data);
+export const addShowsApi = (data) => Api.post('/api/shows/create', data);
+export const getAllShowsApi = () => Api.get('/api/shows/get_all');
+export const getShowByMovieIdApi = (id) =>
+  Api.get(`/api/shows/get_by_movie/${id}`);
+export const getSeatsByShowIdApi = (id) =>
+  Api.get(`/api/seat/get_seats_by_show/${id}`);
+export const makeSeatUnavailableApi = (data) =>
+  Api.put('/api/seat/setAvailable', data);
+export const createBookingApi = (data) => Api.post('/api/booking/create', data);
+export const getAllBookingsApi = () => Api.get('/api/booking/get_all_bookings');
+export const getBookingsByUserApi = () =>
+  Api.get('/api/booking/get_bookings_by_user');
 export const forgotPasswordApi = (data) =>
   Api.post('/api/user/forgot-password', data);
-
-// Reset password API
 export const resetPasswordApi = (data) =>
   Api.post('/api/user/reset-password', data);
-
-// Fetch single profile by ID API
-export const getSingleprofileApi = () =>
-  Api.get(`/api/user/get_single_profile`, config);
-
-// Fetch all profiles
-export const getAllProfileApi = () =>
-  Api.get('/api/user/get_all_users', config);
-
-// Delete profile by ID API
+export const getSingleProfileApi = () =>
+  Api.get('/api/user/get_single_profile');
+export const getAllProfilesApi = () => Api.get('/api/user/get_all_users');
 export const deleteProfileApi = (id) =>
-  Api.delete(`/api/user/delete_profile/${id}`, config);
+  Api.delete(`/api/user/delete_profile/${id}`);
+export const updateProfileApi = (data) =>
+  Api.put('/api/user/update_profile', data);
+export const loginWithGoogleApi = (data) =>
+  Api.post('/api/user/google_login', data);
+export const getUserByGoogleEmailApi = (data) =>
+  Api.post('/api/user/get_user_by_google_email', data);
+export const initializeKhaltiApi = (data) =>
+  Api.post('/api/payment/initialize_khalti', data);
+export const contactUsApi = (data) => Api.post('/api/contact/create', data);
+export const getContactMessagesApi = () => Api.get('/api/contact/get_contact');
+export const getDashboardStatsApi = () => Api.get('/api/admin/dashboard_stats');
+export const getAllLogsApi = () => Api.get('/api/admin/get_all_logs');
 
-// Update profile by ID API
-export const updateProfileApi = (user) =>
-  Api.put(`/api/user/update_profile`, user, config);
+// verify_register_otp
+export const verifyRegisterOtpApi = (data) =>
+  Api.put('/api/user/verify_register_otp', data);
 
-// Buy tickets (in movie details page contaning shows)
-export const buyTicketsApi = (id, data) =>
-  Api.post(`/api/movie/buy_tickets/${id}`, data, config);
-
-// Add show api
-export const addShowsApi = (data) =>
-  Api.post('/api/shows/create', data, config);
-
-// Get All Shows
-export const getAllShowsApi = () => Api.get('/api/shows/get_all', config);
-
-// Get show by ID
-export const getShowByMovieIdApi = (id) =>
-  Api.get(`/api/shows//get_by_movie/${id}`, config);
-
-// Get seats by shoe
-export const getSeatsByShowIdApi = (id) =>
-  Api.get(`/api/seat/get_seats_by_show/${id}`, config);
-
-// Book tickets
-export const bookTicketsApi = (data) =>
-  Api.post('/api/booking/create', data, jsonConfig);
-
-// get a ll bookings api
-export const getAllBookingsApi = () =>
-  Api.get('api/booking/get_all_bookings', config);
-
-export const getBookingsByUserApi = () =>
-  Api.get('api/booking/get_bookings_by_user', config);
-// Make seat unavailable
-export const makeSeatUnavailableApi = (data) =>
-  Api.put('/api/seat/setAvailable', data, jsonConfig);
-
-// dashboard stats
-export const getDashboardStats = () =>
-  Api.get('/api/admin/dashboard_stats', config);
-
-// get ticket detail api
-
-// login with google
-export const loginWithGoogle = (data) =>
-  Api.post('/api/user/google_login', data, config);
-
-//get user by google email
-export const getUserByGoogleEmail = (data) =>
-  Api.post('/api/user/get_user_by_google_email', data, config);
-
-// khalti
-export const initializeKhalti = (data) =>
-  Api.post('/api/payment/initialize_khalti', data, config);
-
-// contact us API
-export const contactUs = (data) =>
-  Api.post('/api/contact/create', data, config);
-
-// get contact us message API
-export const getContactUs = () => Api.get('/api/contact/get_contact', config);
-
-// get_all_logs
-export const getAllLogs = () => Api.get('/api/admin/get_all_logs', config);
+// verify_login_otp
+export const verifyLoginOtpApi = (data) =>
+  Api.put('/api/user/verify_login_otp', data);

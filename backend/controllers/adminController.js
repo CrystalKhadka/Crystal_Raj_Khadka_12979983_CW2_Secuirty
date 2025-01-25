@@ -22,7 +22,11 @@ const getDashboardStats = async (req, res) => {
 // get all logs
 const getAllLogs = async (req, res) => {
   try {
-    const logs = await Logs.find({});
+    const page = req.query.page || 1;
+    const limit = req.query.limit || 10;
+    const logs = await Logs.find({})
+      .skip((page - 1) * limit)
+      .limit(limit);
     res.status(200).json({ logs });
   } catch (error) {
     res.status(500).json({ message: 'Error fetching logs' });

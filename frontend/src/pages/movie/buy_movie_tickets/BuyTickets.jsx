@@ -24,11 +24,11 @@ import { format } from 'date-fns';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import {
-  bookTicketsApi,
+  buyTicketsApi,
   getSeatsByShowIdApi,
   getShowByMovieIdApi,
   getSingleMovieApi,
-  initializeKhalti,
+  initializeKhaltiApi,
   makeSeatUnavailableApi,
 } from '../../../apis/Api';
 
@@ -104,14 +104,14 @@ const BuyTickets = () => {
     };
 
     try {
-      const bookingRes = await bookTicketsApi(data);
+      const bookingRes = await buyTicketsApi(data);
       const khaltiConfig = {
         itemId: bookingRes.data.id,
         totalPrice: parseInt(totalAmount * 100),
         website_url: 'https://localhost:3000',
       };
 
-      const khaltiRes = await initializeKhalti(khaltiConfig);
+      const khaltiRes = await initializeKhaltiApi(khaltiConfig);
       window.location.href = khaltiRes.data.payment_url;
       await makeSeatUnavailableApi(data);
 

@@ -19,7 +19,7 @@ import {
   Typography,
 } from '@mui/material';
 import React, { useEffect, useState } from 'react';
-import { getAllLogs } from '../../../apis/Api';
+import { getAllLogsApi } from '../../../apis/Api';
 
 const LogManagement = () => {
   const [logs, setLogs] = useState([]);
@@ -33,7 +33,7 @@ const LogManagement = () => {
 
   const fetchLogs = async () => {
     try {
-      getAllLogs().then((res) => {
+      getAllLogsApi().then((res) => {
         const data = res.data?.logs || [];
         setLogs(data);
       });

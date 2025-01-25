@@ -21,6 +21,19 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  verifyOTP: {
+    type: Number,
+    default: null,
+  },
+  verifyExpires: {
+    type: Date,
+    default: null,
+  },
+  isVerified: {
+    type: Boolean,
+    default: false,
+  },
+
   resetPasswordOTP: {
     type: Number,
     default: null,
@@ -43,7 +56,12 @@ const userSchema = new mongoose.Schema({
   },
   loginDevices: [],
 
-  myDevices: [],
+  rememberedDevices: [],
+  passwordExpiresAt: {
+    type: Date,
+    default: null,
+  },
+  oldPasswords: [],
 });
 
 // Define a virtual property to check if the account is locked

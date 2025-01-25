@@ -4,6 +4,10 @@ const jwt = require('jsonwebtoken');
 const sendOtp = require('../service/sendotp');
 const User = require('../models/userModel');
 const { OAuth2Client } = require('google-auth-library');
+const {
+  sendLoginVerificationEmail,
+  sendRegisterOtp,
+} = require('../service/sendEmail');
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const createUser = async (req, res) => {
@@ -46,6 +50,8 @@ const createUser = async (req, res) => {
       phoneNumber: phoneNumber,
       email: email,
       password: hashedPassword,
+      oldPasswords: [hashedPassword],
+      passwordExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
     });
 
     console.log(newUser);
@@ -67,16 +73,12 @@ const createUser = async (req, res) => {
   }
 };
 
-// Login Function
 const loginUser = async (req, res) => {
   console.log(req.body); // Log incoming data for debugging
 
-  // Destructure email and password from request body
   const { email, password } = req.body;
+  const device = req.headers['user-agent']; // Identify the device using User-Agent
 
-  const device = req.headers['user-agent'];
-
-  // Validate input fields
   if (!email || !password) {
     return res.status(400).json({
       success: false,
@@ -85,10 +87,8 @@ const loginUser = async (req, res) => {
   }
 
   try {
-    // Find user by email
     const user = await userModel.findOne({ email: email });
 
-    // Check if user exists
     if (!user) {
       return res.status(400).json({
         success: false,
@@ -96,7 +96,6 @@ const loginUser = async (req, res) => {
       });
     }
 
-    // Check if account is locked
     if (user.isLocked) {
       return res.status(403).json({
         success: false,
@@ -106,10 +105,8 @@ const loginUser = async (req, res) => {
       });
     }
 
-    // Compare provided password with the hashed password in the database
     const isValidPassword = await bcrypt.compare(password, user.password);
 
-    // If password is invalid, increment login attempts and check for locking
     if (!isValidPassword) {
       await user.incrementLoginAttempts();
       const attemptsRemaining = 5 - user.loginAttempts;
@@ -128,21 +125,74 @@ const loginUser = async (req, res) => {
     // If login is successful, reset login attempts
     await user.resetLoginAttempts();
 
-    // Generate JWT token
+    if (!user.isVerified) {
+      // Generate OTP for verification
+      const randomOTP = Math.floor(100000 + Math.random() * 900000);
+      console.log(randomOTP);
+
+      user.verifyOTP = randomOTP;
+      user.verifyExpires = Date.now() + 10 * 60 * 1000; // OTP valid for 10 minutes
+
+      // Save the OTP in the database
+      await user.save();
+
+      // Send OTP to the user's email
+      const sent = await sendRegisterOtp(email, randomOTP);
+
+      if (!sent) {
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to send OTP',
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: 'OTP sent to your email. Verify to continue.',
+        registerOtpRequired: true,
+      });
+    }
+
+    // Check if the device is new
+    if (!user.rememberedDevices.includes(device)) {
+      // Generate OTP for verification
+      const randomOTP = Math.floor(100000 + Math.random() * 900000);
+      console.log(randomOTP);
+
+      user.verifyOTP = randomOTP;
+      user.verifyExpires = Date.now() + 10 * 60 * 1000; // OTP valid for 10 minutes
+
+      // Save the OTP in the database
+      await user.save();
+
+      // Send OTP to the user's email
+      const sent = await sendLoginVerificationEmail(email, randomOTP);
+
+      if (!sent) {
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to send OTP',
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: 'OTP sent to your email. Verify to continue.',
+        otpRequired: true,
+      });
+    }
+
+    // If device is recognized, issue token
     const token = jwt.sign(
       { id: user._id, isAdmin: user.isAdmin },
       process.env.JWT_SECRET,
-      { expiresIn: '1h' } // Token expires in 1 hour
+      { expiresIn: '1h' }
     );
 
     user.loginDevices.push(device);
     await user.save();
 
-    // Set security-related headers
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('X-Frame-Options', 'DENY');
-
-    // Respond with token and user data
+    // Respond with the token
     res.status(200).json({
       success: true,
       message: 'User logged in successfully',
@@ -157,9 +207,114 @@ const loginUser = async (req, res) => {
     });
   } catch (error) {
     console.error('Error logging in user:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal Server Error',
+    });
+  }
+};
+
+// verify otp
+const verifyRegisterOTP = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    // Just take the device info not the time
+    const device = req.headers['user-agent'];
+    const user = await userModel.findOne({ email: email });
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    if (user.verifyExpires < Date.now()) {
+      return res.status(400).json({
+        success: false,
+        message: 'OTP has expired',
+      });
+    }
+
+    if (user.verifyOTP !== parseInt(otp)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid OTP',
+      });
+    }
+
+    user.isVerified = true;
+
+    // If the account is verified, generate a token
+    const token = jwt.sign(
+      { id: user._id, isAdmin: user.isAdmin },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+
+    user.loginDevices.push(device);
+    user.verifyOTP = null;
+    user.verifyExpires = null;
+    await user.save();
+    return res.status(200).json({
+      success: true,
+      message: 'OTP verified successfully!',
+      token: token,
+    });
+  } catch (error) {
+    console.log(error);
     return res.status(500).json({
       success: false,
       message: 'Internal Server Error',
+      error: error,
+    });
+  }
+};
+
+const verifyLoginOTP = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    const device = req.headers['user-agent'];
+    const user = await userModel.findOne({ email: email });
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+    if (user.verifyExpires < Date.now()) {
+      return res.status(400).json({
+        success: false,
+        message: 'OTP has expired',
+      });
+    }
+    if (user.verifyOTP !== parseInt(otp)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid OTP',
+      });
+    }
+
+    user.loginDevices.push(device);
+    user.verifyOTP = null;
+    user.verifyExpires = null;
+
+    const token = jwt.sign(
+      { id: user._id, isAdmin: user.isAdmin },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+    await user.save();
+    return res.status(200).json({
+      success: true,
+      message: 'OTP verified successfully!',
+      token: token,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal Server Error',
+      error: error,
     });
   }
 };
@@ -313,6 +468,7 @@ const getSingleProfile = async (req, res) => {
         email: user.email,
         password: 'Please update your password',
         _id: user._id,
+        isAdmin: user.isAdmin,
       },
     });
   } catch (error) {
@@ -331,11 +487,7 @@ const updateUser = async (req, res) => {
   const { password, ...restBody } = req.body; // Destructure password from req.body
 
   try {
-    // Hash the password if present in the request body
-    if (password) {
-      const hashedPassword = await bcrypt.hash(password, 10);
-      restBody.password = hashedPassword;
-    }
+    // Check if rememberDevice is true
 
     const user = await userModel.findById(id);
 
@@ -344,6 +496,10 @@ const updateUser = async (req, res) => {
         success: false,
         message: 'User not found',
       });
+    }
+    if (restBody.rememberDevice) {
+      const device = req.headers['user-agent'];
+      user.rememberedDevices.push(device);
     }
 
     user.username = restBody.username;
@@ -517,4 +673,6 @@ module.exports = {
   getToken,
   googleLogin,
   getUserByGoogleEmail,
+  verifyRegisterOTP,
+  verifyLoginOTP,
 };

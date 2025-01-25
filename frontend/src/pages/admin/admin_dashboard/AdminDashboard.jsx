@@ -27,7 +27,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { getDashboardStats } from '../../../apis/Api';
+import { getDashboardStatsApi } from '../../../apis/Api';
 
 // StatCard Component
 const StatCard = ({ title, value, icon: Icon, color }) => {
@@ -72,7 +72,7 @@ const AdminDashboard = () => {
   const theme = useTheme();
 
   useEffect(() => {
-    getDashboardStats()
+    getDashboardStatsApi()
       .then((res) => {
         if (res.status === 200) {
           setStats(res.data);

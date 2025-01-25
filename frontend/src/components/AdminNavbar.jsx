@@ -18,7 +18,9 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { getSingleProfileApi } from '../apis/Api';
 
 const DRAWER_WIDTH = 280;
 
@@ -56,7 +58,19 @@ const menuItems = [
 const AdminNavbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const admin = JSON.parse(localStorage.getItem('user'));
+  const [admin, setAdmin] = useState(null);
+
+  useEffect(() => {
+    const fetchAdmin = async () => {
+      try {
+        const response = await getSingleProfileApi();
+        setAdmin(response.data.user);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchAdmin(); 
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('user');

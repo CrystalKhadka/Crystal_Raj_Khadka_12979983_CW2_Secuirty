@@ -26,7 +26,7 @@ import {
 } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
-import { deleteProfileApi, getAllProfileApi } from '../../../apis/Api';
+import { deleteProfileApi, getAllProfilesApi } from '../../../apis/Api';
 
 const CustomerManagement = () => {
   const [users, setUsers] = useState([]);
@@ -41,7 +41,7 @@ const CustomerManagement = () => {
 
   const fetchUsers = () => {
     setLoading(true);
-    getAllProfileApi()
+    getAllProfilesApi()
       .then((res) => {
         setUsers(res.data.users || []);
         setLoading(false);
