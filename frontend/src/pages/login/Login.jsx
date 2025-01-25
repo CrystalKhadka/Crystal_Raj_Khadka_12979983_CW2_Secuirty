@@ -60,7 +60,8 @@ const Login = () => {
     verifyLoginOtpApi({ email, otp: otpString })
       .then((res) => {
         toast.success(res.data.message);
-        document.cookie = `token=${res.data.token}`;
+        // document.cookie = `token=${res.data.token}; path=/; secure; HttpOnly;`;
+
         window.location.href = '/homepage';
       })
       .catch((err) => {
@@ -73,7 +74,8 @@ const Login = () => {
     verifyRegisterOtpApi({ email, otp: otpString })
       .then((res) => {
         toast.success(res.data.message);
-        document.cookie = `token=${res.data.token}`;
+        // document.cookie = `token=${res.data.token}; path=/; secure; HttpOnly;`;
+
         window.location.href = '/homepage';
       })
       .catch((err) => {
@@ -161,7 +163,8 @@ const Login = () => {
       } else {
         toast.success(res.data.message);
         // set cookie
-        document.cookie = `token=${res.data.token}`;
+        // document.cookie = `token=${res.data.token}; path=/; secure; HttpOnly;`;
+
         window.location.href = '/homepage';
       }
     } catch (err) {

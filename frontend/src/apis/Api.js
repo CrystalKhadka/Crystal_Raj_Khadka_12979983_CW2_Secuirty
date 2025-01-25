@@ -14,27 +14,6 @@ const Api = axios.create({
   withCredentials: true, // Include cookies in requests
 });
 
-// Add request interceptor to dynamically add Authorization header
-Api.interceptors.request.use(
-  (config) => {
-    const token = getTokenFromCookies();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-// Add response interceptor for global error handling
-Api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    console.error('API Error:', error.response || error.message);
-    return Promise.reject(error);
-  }
-);
-
 // API Endpoints
 export const registerUserApi = (data) => Api.post('/api/user/create', data);
 export const loginUserApi = (data) => Api.post('/api/user/login', data);

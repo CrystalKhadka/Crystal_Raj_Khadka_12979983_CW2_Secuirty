@@ -183,20 +183,28 @@ const loginUser = async (req, res) => {
     }
 
     // If device is recognized, issue token
-    const token = jwt.sign(
-      { id: user._id, isAdmin: user.isAdmin },
-      process.env.JWT_SECRET,
-      { expiresIn: '1h' }
-    );
 
     user.loginDevices.push(device);
     await user.save();
+
+    const token = jwt.sign(
+      { id: user._id, isAdmin: user.isAdmin },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRY }
+    );
+
+    res.cookie('token', token, {
+      httpOnly: true, // Secure against XSS attacks
+      secure: true, // Only sent over HTTPS
+      sameSite: 'Strict', // Prevents CSRF attacks
+      maxAge: 60 * 60 * 1000, // Expires in 1 hour
+    });
 
     // Respond with the token
     res.status(200).json({
       success: true,
       message: 'User logged in successfully',
-      token: token,
+
       userData: {
         id: user._id,
         username: user.username,
@@ -248,8 +256,15 @@ const verifyRegisterOTP = async (req, res) => {
     const token = jwt.sign(
       { id: user._id, isAdmin: user.isAdmin },
       process.env.JWT_SECRET,
-      { expiresIn: '1h' }
+      { expiresIn: process.env.JWT_EXPIRY }
     );
+
+    res.cookie('token', token, {
+      httpOnly: true, // Secure against XSS attacks
+      secure: true, // Only sent over HTTPS
+      sameSite: 'Strict', // Prevents CSRF attacks
+      maxAge: 60 * 60 * 1000, // Expires in 1 hour
+    });
 
     user.loginDevices.push(device);
     user.verifyOTP = null;
@@ -258,7 +273,6 @@ const verifyRegisterOTP = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: 'OTP verified successfully!',
-      token: token,
     });
   } catch (error) {
     console.log(error);
@@ -298,12 +312,20 @@ const verifyLoginOTP = async (req, res) => {
     user.verifyOTP = null;
     user.verifyExpires = null;
 
+    await user.save();
+
     const token = jwt.sign(
       { id: user._id, isAdmin: user.isAdmin },
       process.env.JWT_SECRET,
-      { expiresIn: '1h' }
+      { expiresIn: process.env.JWT_EXPIRY }
     );
-    await user.save();
+
+    res.cookie('token', token, {
+      httpOnly: true, // Secure against XSS attacks
+      secure: true, // Only sent over HTTPS
+      sameSite: 'Strict', // Prevents CSRF attacks
+      maxAge: 60 * 60 * 1000, // Expires in 1 hour
+    });
     return res.status(200).json({
       success: true,
       message: 'OTP verified successfully!',
