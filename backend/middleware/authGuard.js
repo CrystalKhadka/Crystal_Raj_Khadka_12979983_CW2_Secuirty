@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
-const Log = require('../models/logModel'); // Import the Log model
+const mongoSanitize = require('mongo-sanitize');
+const Log = require('../models/logModel');
 const cookieParser = require('cookie-parser');
 
 /**
@@ -17,7 +18,7 @@ const extractTokenFromCookies = (cookies) => {
  */
 const logActivity = async (logData) => {
   try {
-    await Log.create(logData);
+    await Log.create(mongoSanitize(logData)); // Sanitize log data before saving
   } catch (err) {
     console.error('Failed to log activity:', err.message);
   }
@@ -25,9 +26,14 @@ const logActivity = async (logData) => {
 
 /**
  * Middleware to handle public routes
- * Logs request details to MongoDB.
+ * Logs request details to MongoDB and sanitizes incoming data.
  */
 const publicGuard = async (req, res, next) => {
+  // Sanitize incoming data
+  req.body = mongoSanitize(req.body);
+  req.query = mongoSanitize(req.query);
+  req.params = mongoSanitize(req.params);
+
   await logActivity({
     level: 'info',
     message: 'Public route accessed',
@@ -46,9 +52,14 @@ const publicGuard = async (req, res, next) => {
 
 /**
  * Middleware to validate authentication
- * Logs authentication activity to MongoDB.
+ * Logs authentication activity to MongoDB and sanitizes incoming data.
  */
 const authGuard = async (req, res, next) => {
+  // Sanitize incoming data
+  req.body = mongoSanitize(req.body);
+  req.query = mongoSanitize(req.query);
+  req.params = mongoSanitize(req.params);
+
   try {
     const token = extractTokenFromCookies(req.cookies);
 
@@ -69,7 +80,7 @@ const authGuard = async (req, res, next) => {
     }
 
     const decodedUserData = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decodedUserData;
+    req.user = mongoSanitize(decodedUserData); // Sanitize decoded user data
 
     await logActivity({
       level: 'info',
@@ -104,9 +115,14 @@ const authGuard = async (req, res, next) => {
 
 /**
  * Middleware to validate admin access
- * Logs admin access activity to MongoDB.
+ * Logs admin access activity to MongoDB and sanitizes incoming data.
  */
 const adminGuard = async (req, res, next) => {
+  // Sanitize incoming data
+  req.body = mongoSanitize(req.body);
+  req.query = mongoSanitize(req.query);
+  req.params = mongoSanitize(req.params);
+
   try {
     const token = extractTokenFromCookies(req.cookies);
 
@@ -127,7 +143,7 @@ const adminGuard = async (req, res, next) => {
     }
 
     const decodedUserData = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decodedUserData;
+    req.user = mongoSanitize(decodedUserData); // Sanitize decoded user data
 
     if (!req.user.isAdmin) {
       await logActivity({

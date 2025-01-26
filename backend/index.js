@@ -9,6 +9,7 @@ const accessFormData = require('express-fileupload');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
+const mongoSanitize = require('mongo-sanitize');
 // Load environment variables from .env file
 dotenv.config();
 
@@ -64,6 +65,9 @@ app.use(cookieParser()); // Enable cookie parsing
 
 // Enable file upload
 app.use(accessFormData());
+
+// apply mongo sanitize
+app.use(mongoSanitize());
 
 // Connecting to database
 connectDatabase();
