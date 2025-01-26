@@ -80,16 +80,8 @@ const Footer = () => {
                 fontWeight: 'bold',
                 mb: 2,
               }}>
-              Cold Films
+              Movie Tickets
             </Typography>
-            <img
-              src='/logo.png'
-              alt='Cold Films Logo'
-              style={{
-                height: '100px',
-                margin: '16px 0',
-              }}
-            />
           </Box>
 
           {/* Tagline */}
@@ -109,7 +101,7 @@ const Footer = () => {
             color='text.secondary'
             align='center'
             sx={{ mt: 2 }}>
-            © {new Date().getFullYear()} Copyright: Cold Films
+            © {new Date().getFullYear()} Copyright: Movie Tickets
           </Typography>
         </Stack>
       </Container>

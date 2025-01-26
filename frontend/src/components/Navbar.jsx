@@ -128,7 +128,7 @@ const Navbar = () => {
               WebkitTextFillColor: 'transparent',
               flexGrow: { xs: 1, md: 0 },
             }}>
-            Cold Films
+            Movie Tickets
           </Typography>
 
           {isMobile ? (
