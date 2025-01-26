@@ -9,7 +9,8 @@ const accessFormData = require('express-fileupload');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
-const mongoSanitize = require('mongo-sanitize');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
 // Load environment variables from .env file
 dotenv.config();
 
@@ -64,10 +65,21 @@ const limiter = rateLimit({
 app.use(cookieParser()); // Enable cookie parsing
 
 // Enable file upload
-app.use(accessFormData());
+// Enable file upload
+app.use(
+  accessFormData({
+    limits: { fileSize: 2 * 1024 * 1024 }, // Limit file size to 2MB
+    abortOnLimit: true, // Abort upload if file exceeds size limit
+    safeFileNames: true, // Sanitize filenames automatically
+    preserveExtension: true, // Preserve file extensions
+  })
+);
 
 // apply mongo sanitize
 app.use(mongoSanitize());
+
+// apply xss clean
+app.use(xss());
 
 // Connecting to database
 connectDatabase();
