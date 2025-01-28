@@ -80,7 +80,7 @@ const Footer = () => {
                 fontWeight: 'bold',
                 mb: 2,
               }}>
-              Movie Tickets
+              CineEase
             </Typography>
           </Box>
 
@@ -101,7 +101,7 @@ const Footer = () => {
             color='text.secondary'
             align='center'
             sx={{ mt: 2 }}>
-            © {new Date().getFullYear()} Copyright: Movie Tickets
+            © {new Date().getFullYear()} Copyright: CineEase
           </Typography>
         </Stack>
       </Container>

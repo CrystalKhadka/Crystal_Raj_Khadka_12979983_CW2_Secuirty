@@ -101,7 +101,7 @@ const ContactUs = () => {
             <i className='fas fa-phone'></i> +1 (555) 123-4567
           </p>
           <p>
-            <i className='fas fa-envelope'></i> contact@coldfilms.com
+            <i className='fas fa-envelope'></i> contact@CineEase.com
           </p>
 
           <div className='social-media'>

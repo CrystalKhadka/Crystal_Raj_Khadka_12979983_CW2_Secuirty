@@ -11,19 +11,19 @@ const createEmailTemplate = async (email, otp, isRegistration = false) => {
 
   const getWelcomeMessage = () => {
     return isRegistration
-      ? "Welcome to Movie Tickets! We're excited to have you join us."
-      : 'Welcome back to Movie Tickets!';
+      ? "Welcome to CineEase! We're excited to have you join us."
+      : 'Welcome back to CineEase!';
   };
 
   const mailOptions = {
     from: {
-      name: 'Movie Tickets',
+      name: 'CineEase',
       address: process.env.EMAIL_USER,
     },
     to: email,
     subject: isRegistration
-      ? 'Welcome to Movie Tickets - Verify Your Email'
-      : 'Movie Tickets - Verify Your Login',
+      ? 'Welcome to CineEase - Verify Your Email'
+      : 'CineEase - Verify Your Login',
     html: `
       <!DOCTYPE html>
       <html>
@@ -37,7 +37,7 @@ const createEmailTemplate = async (email, otp, isRegistration = false) => {
           <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
             <!-- Logo Header -->
             <div style="text-align: center; margin-bottom: 32px;">
-              <h1 style="color: #2a7d73; font-size: 32px; font-weight: 700; margin: 0;">Movie Tickets</h1>
+              <h1 style="color: #2a7d73; font-size: 32px; font-weight: 700; margin: 0;">CineEase</h1>
               <p style="color: #2a7d73; font-size: 16px; margin: 4px 0 0 0;">Your Gateway to Entertainment</p>
             </div>
             
@@ -82,7 +82,7 @@ const createEmailTemplate = async (email, otp, isRegistration = false) => {
               <!-- Security Notice -->
               <div style="background-color: #f8fafc; border-radius: 12px; padding: 16px; margin: 32px 0; border-left: 4px solid #2a7d73;">
                 <p style="margin: 0; font-size: 14px; color: #64748b;">
-                  🔒 For your security, never share this verification code with anyone, including Movie Tickets staff.
+                  🔒 For your security, never share this verification code with anyone, including CineEase staff.
                 </p>
               </div>
             </div>
@@ -100,7 +100,7 @@ const createEmailTemplate = async (email, otp, isRegistration = false) => {
             <!-- Footer -->
             <div style="text-align: center; padding: 32px 0; border-top: 1px solid #e2e8f0;">
               <p style="margin: 0 0 16px; font-size: 14px; color: #64748b;">
-                © ${new Date().getFullYear()} Movie Tickets. All rights reserved.
+                © ${new Date().getFullYear()} CineEase. All rights reserved.
               </p>
               <p style="margin: 0 0 24px; font-size: 14px; color: #64748b;">
                 123 Cinema Street, Entertainment District, MB 12345

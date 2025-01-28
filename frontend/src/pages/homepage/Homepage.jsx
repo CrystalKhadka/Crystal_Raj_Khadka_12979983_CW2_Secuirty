@@ -192,7 +192,7 @@ const Homepage = () => {
           gutterBottom
           color='primary'
           sx={{ fontWeight: 'bold' }}>
-          Welcome to Movie Tickets
+          Welcome to CineEase
         </Typography>
 
         <Box sx={{ maxWidth: 600, mx: 'auto', mb: 3 }}>

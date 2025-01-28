@@ -128,7 +128,7 @@ const Navbar = () => {
               WebkitTextFillColor: 'transparent',
               flexGrow: { xs: 1, md: 0 },
             }}>
-            Movie Tickets
+            CineEase
           </Typography>
 
           {isMobile ? (
