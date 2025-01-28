@@ -197,20 +197,7 @@ const Profile = () => {
                   variant='outlined'
                 />
               </Grid>
-              <Grid
-                item
-                xs={12}>
-                <TextField
-                  fullWidth
-                  name='bio'
-                  label='Bio'
-                  multiline
-                  rows={3}
-                  value={formData.bio}
-                  onChange={handleChange}
-                  variant='outlined'
-                />
-              </Grid>
+
               <Grid
                 item
                 xs={12}
@@ -254,7 +241,14 @@ const Profile = () => {
               </Grid>
             </Grid>
 
-            <Box sx={{ mt: 4, textAlign: 'center' }}>
+            <Box
+              sx={{
+                mt: 4,
+                textAlign: 'center',
+                gap: 4,
+                justifyContent: 'center',
+                display: 'flex',
+              }}>
               <Button
                 type='submit'
                 variant='contained'
@@ -268,6 +262,34 @@ const Profile = () => {
                   fontSize: '1.1rem',
                 }}>
                 Save Changes
+              </Button>
+              <Button
+                type='button'
+                variant='contained'
+                color='secondary'
+                size='large'
+                sx={{
+                  px: 6,
+                  py: 1.5,
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontSize: '1.1rem',
+                }}>
+                Change Password
+              </Button>
+              <Button
+                type='button'
+                variant='contained'
+                color='error'
+                size='large'
+                sx={{
+                  px: 6,
+                  py: 1.5,
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontSize: '1.1rem',
+                }}>
+                Delete
               </Button>
             </Box>
           </Box>

@@ -2,7 +2,6 @@ import {
   Email as EmailIcon,
   LocalMovies as LocalMoviesIcon,
   Lock as LockIcon,
-  Phone as PhoneIcon,
   Visibility as VisibilityIcon,
   VisibilityOff as VisibilityOffIcon,
   WavingHand as WavingHandIcon,
@@ -25,9 +24,11 @@ import {
   Typography,
   useTheme,
 } from '@mui/material';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
+import zxcvbn from 'zxcvbn';
 
+import { Link } from 'react-router-dom';
 import {
   forgotPasswordApi,
   loginUserApi,
@@ -37,11 +38,92 @@ import {
 } from '../../apis/Api';
 import VerificationModal from '../../components/VerificationModel';
 
+const PasswordStrengthIndicator = ({ password }) => {
+  const theme = useTheme();
+  const result = useMemo(() => zxcvbn(password), [password]);
+
+  const strengthColor = useMemo(() => {
+    switch (result.score) {
+      case 0:
+        return '#ff4436';
+      case 1:
+        return '#ffa000';
+      case 2:
+        return '#ffd600';
+      case 3:
+        return '#52c41a';
+      case 4:
+        return '#00c853';
+      default:
+        return '#e0e0e0';
+    }
+  }, [result.score]);
+
+  const strengthText = useMemo(() => {
+    switch (result.score) {
+      case 0:
+        return 'Very Weak';
+      case 1:
+        return 'Weak';
+      case 2:
+        return 'Fair';
+      case 3:
+        return 'Good';
+      case 4:
+        return 'Strong';
+      default:
+        return '';
+    }
+  }, [result.score]);
+
+  return (
+    <>
+      <Box sx={{ width: '100%', mb: 1 }}>
+        <Box
+          sx={{
+            height: 4,
+            borderRadius: 2,
+            backgroundColor: alpha(theme.palette.grey[300], 0.3),
+            overflow: 'hidden',
+          }}>
+          <Box
+            sx={{
+              height: '100%',
+              width: `${((result.score + 1) / 5) * 100}%`,
+              backgroundColor: strengthColor,
+              transition: 'all 0.3s ease',
+            }}
+          />
+        </Box>
+      </Box>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}>
+        <Typography
+          variant='caption'
+          sx={{ color: strengthColor }}>
+          {strengthText}
+        </Typography>
+        {result.feedback.warning && (
+          <Typography
+            variant='caption'
+            color='text.secondary'>
+            {result.feedback.warning}
+          </Typography>
+        )}
+      </Box>
+    </>
+  );
+};
+
 const Login = () => {
   const theme = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [resetEmail, setResetEmail] = useState('');
   const [otp, setOtp] = useState('');
   const [resetPassword, setResetPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -60,8 +142,7 @@ const Login = () => {
     verifyLoginOtpApi({ email, otp: otpString })
       .then((res) => {
         toast.success(res.data.message);
-        // document.cookie = `token=${res.data.token}; path=/; secure; HttpOnly;`;
-
+        localStorage.setItem('token', res.data.token);
         window.location.href = '/homepage';
       })
       .catch((err) => {
@@ -74,8 +155,7 @@ const Login = () => {
     verifyRegisterOtpApi({ email, otp: otpString })
       .then((res) => {
         toast.success(res.data.message);
-        // document.cookie = `token=${res.data.token}; path=/; secure; HttpOnly;`;
-
+        localStorage.setItem('token', res.data.token);
         window.location.href = '/homepage';
       })
       .catch((err) => {
@@ -113,11 +193,22 @@ const Login = () => {
       return;
     }
 
+    // Check password strength before allowing reset
+    const strength = zxcvbn(resetPassword);
+    if (strength.score < 2) {
+      toast.warning('Please choose a stronger password');
+      return;
+    }
+
     setIsLoading(true);
     try {
-      await resetPasswordApi({ phoneNumber, otp, password: resetPassword });
+      await resetPasswordApi({
+        email: resetEmail,
+        otp,
+        password: resetPassword,
+      });
       toast.success('Password reset successfully');
-      setPhoneNumber('');
+      setResetEmail('');
       setOtp('');
       setResetPassword('');
       setConfirmPassword('');
@@ -132,14 +223,14 @@ const Login = () => {
 
   const sentOtp = async (e) => {
     e.preventDefault();
-    if (!phoneNumber.trim()) {
-      toast.warning('Please enter phone number');
+    if (!resetEmail.trim()) {
+      toast.warning('Please enter your email');
       return;
     }
 
     setIsLoading(true);
     try {
-      const res = await forgotPasswordApi({ phoneNumber });
+      const res = await forgotPasswordApi({ email: resetEmail });
       toast.success(res.data.message);
       setIsSentOtp(true);
     } catch (err) {
@@ -162,9 +253,6 @@ const Login = () => {
         setOpenVerificationModal(true);
       } else {
         toast.success(res.data.message);
-        // set cookie
-        // document.cookie = `token=${res.data.token}; path=/; secure; HttpOnly;`;
-
         window.location.href = '/homepage';
       }
     } catch (err) {
@@ -391,18 +479,11 @@ const Login = () => {
                     display='inline'>
                     Don't have an account?{' '}
                   </Typography>
-                  <Button
-                    href='/register'
-                    sx={{
-                      textTransform: 'none',
-                      fontWeight: 600,
-                      '&:hover': {
-                        background: 'transparent',
-                        color: theme.palette.primary.main,
-                      },
-                    }}>
-                    Create one
-                  </Button>
+                  <Link
+                    to='/register'
+                    style={{ color: theme.palette.primary.main }}>
+                    Create an account
+                  </Link>
                 </Box>
               </Box>
             </CardContent>
@@ -413,7 +494,7 @@ const Login = () => {
       <VerificationModal
         open={openRegisterVerificationModal}
         onClose={() => setOpenRegisterVerificationModal(false)}
-        isRegistration={true} // or false for login
+        isRegistration={true}
         onVerify={handleRegisterVerification}
         email={email}
       />
@@ -421,7 +502,7 @@ const Login = () => {
       <VerificationModal
         open={openVerificationModal}
         onClose={() => setOpenVerificationModal(false)}
-        isRegistration={false} // or false for login
+        isRegistration={false}
         onVerify={handleVerification}
         email={email}
       />
@@ -432,7 +513,7 @@ const Login = () => {
           if (!isLoading) {
             setShowForgotPasswordModal(false);
             setIsSentOtp(false);
-            setPhoneNumber('');
+            setResetEmail('');
             setOtp('');
             setResetPassword('');
             setConfirmPassword('');
@@ -464,16 +545,16 @@ const Login = () => {
               required
               fullWidth
               id='phone'
-              label='Phone Number'
-              name='phone'
+              label='Reset Email'
+              name='resetEmail'
               autoComplete='tel'
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
+              value={resetEmail}
+              onChange={(e) => setResetEmail(e.target.value)}
               disabled={isSentOtp}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position='start'>
-                    <PhoneIcon color={isSentOtp ? 'disabled' : 'primary'} />
+                    <EmailIcon color={isSentOtp ? 'disabled' : 'primary'} />
                   </InputAdornment>
                 ),
               }}
@@ -539,6 +620,12 @@ const Login = () => {
                   }}
                 />
 
+                {resetPassword && (
+                  <Box sx={{ mt: 1 }}>
+                    <PasswordStrengthIndicator password={resetPassword} />
+                  </Box>
+                )}
+
                 <TextField
                   {...textFieldProps}
                   margin='normal'
@@ -568,7 +655,7 @@ const Login = () => {
               if (!isLoading) {
                 setShowForgotPasswordModal(false);
                 setIsSentOtp(false);
-                setPhoneNumber('');
+                setResetEmail('');
                 setOtp('');
                 setResetPassword('');
                 setConfirmPassword('');

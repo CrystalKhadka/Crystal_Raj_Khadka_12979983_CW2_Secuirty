@@ -1,19 +1,41 @@
 const nodemailer = require('nodemailer');
 
-const createEmailTemplate = async (email, otp, isRegistration = false) => {
+const createEmailTemplate = async (email, otp, templateType = 'login') => {
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: process.env.EMAIL_USER, // Move to environment variables for security
+      user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
     },
   });
 
-  const getWelcomeMessage = () => {
-    return isRegistration
-      ? "Welcome to CineEase! We're excited to have you join us."
-      : 'Welcome back to CineEase!';
+  const templateConfig = {
+    login: {
+      subject: 'CineEase - Verify Your Login',
+      heading: 'Verify Your Login',
+      welcomeMessage: 'Welcome back to CineEase!',
+      actionText:
+        'Please verify your login by entering this verification code:',
+      buttonText: 'Verify Login',
+    },
+    register: {
+      subject: 'Welcome to CineEase - Verify Your Email',
+      heading: 'Verify Your Email Address',
+      welcomeMessage: "Welcome to CineEase! We're excited to have you join us.",
+      actionText:
+        'Please verify your email address by entering this verification code:',
+      buttonText: 'Verify Email',
+    },
+    reset: {
+      subject: 'CineEase - Reset Your Password',
+      heading: 'Reset Your Password',
+      welcomeMessage: 'We received a request to reset your password.',
+      actionText: 'Enter this code to reset your password:',
+      buttonText: 'Reset Password',
+    },
   };
+
+  const config = templateConfig[templateType];
 
   const mailOptions = {
     from: {
@@ -21,97 +43,78 @@ const createEmailTemplate = async (email, otp, isRegistration = false) => {
       address: process.env.EMAIL_USER,
     },
     to: email,
-    subject: isRegistration
-      ? 'Welcome to CineEase - Verify Your Email'
-      : 'CineEase - Verify Your Login',
+    subject: config.subject,
     html: `
       <!DOCTYPE html>
       <html>
         <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+          <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
         </head>
-        <body style="margin: 0; padding: 0; font-family: 'Inter', Arial, sans-serif; line-height: 1.6; color: #1a1a1a; background-color: #f4f4f5;">
+        <body style="margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', Arial, sans-serif; line-height: 1.6; color: #0f172a; background-color: #f8fafc;">
           <!-- Main Container -->
-          <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
+          <div style="max-width: 600px; margin: 0 auto; padding: 32px 20px;">
             <!-- Logo Header -->
-            <div style="text-align: center; margin-bottom: 32px;">
-              <h1 style="color: #2a7d73; font-size: 32px; font-weight: 700; margin: 0;">CineEase</h1>
-              <p style="color: #2a7d73; font-size: 16px; margin: 4px 0 0 0;">Your Gateway to Entertainment</p>
+            <div style="text-align: center; margin-bottom: 40px;">
+              <div style="background-color: #2a7d73; padding: 24px; border-radius: 16px;">
+                <h1 style="color: #ffffff; font-size: 28px; font-weight: 700; margin: 0;">CineEase</h1>
+                <p style="color: #e2e8f0; font-size: 14px; margin: 4px 0 0 0;">Your Gateway to Entertainment</p>
+              </div>
             </div>
             
             <!-- Content Card -->
-            <div style="background-color: #ffffff; border-radius: 16px; padding: 48px 32px; margin: 0 0 24px 0; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
-              <h2 style="margin: 0 0 24px; color: #1a1a1a; font-size: 24px; font-weight: 600; text-align: center;">
-                Verify Your Email Address
+            <div style="background-color: #ffffff; border-radius: 24px; padding: 40px 32px; margin-bottom: 24px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.03);">
+              <h2 style="margin: 0 0 24px; color: #0f172a; font-size: 24px; font-weight: 600; text-align: center;">
+                ${config.heading}
               </h2>
               
-              <p style="margin: 0 0 16px; color: #4b5563; font-size: 16px;">
-                Hi there,
-              </p>
-              
-              <p style="margin: 0 0 24px; color: #4b5563; font-size: 16px;">
-                ${getWelcomeMessage()} Please verify your email address by entering this verification code:
+              <p style="margin: 0 0 24px; color: #334155; font-size: 16px;">
+                Hi there,<br><br>
+                ${config.welcomeMessage} ${config.actionText}
               </p>
               
               <!-- OTP Container -->
               <div style="text-align: center; margin: 32px 0;">
-                <div style="background-color: #f8fafc; border: 2px dashed #2a7d73; border-radius: 12px; padding: 24px; display: inline-block;">
-                  <span style="font-family: 'Courier New', monospace; font-size: 36px; font-weight: bold; color: #2a7d73; letter-spacing: 8px;">
+                <div style="background: linear-gradient(135deg, #f1f5f9 0%, #f8fafc 100%); border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px;">
+                  <span style="font-family: 'Courier New', monospace; font-size: 32px; font-weight: bold; color: #2a7d73; letter-spacing: 8px;">
                     ${otp}
                   </span>
+                  <p style="margin: 16px 0 0 0; font-size: 14px; color: #64748b;">
+                    This code will expire in 10 minutes
+                  </p>
                 </div>
-                <p style="margin: 16px 0 0 0; font-size: 14px; color: #64748b;">
-                  This code will expire in 10 minutes
-                </p>
               </div>
               
               <!-- Action Button -->
               <div style="text-align: center; margin: 32px 0;">
                 <a href="https://movietickets.com/verify" 
-                   style="display: inline-block; background-color: #2a7d73; color: #ffffff; text-decoration: none; padding: 12px 32px; border-radius: 8px; font-weight: 500; font-size: 16px;">
-                  Verify Email Address
+                   style="display: inline-block; background: linear-gradient(135deg, #2a7d73 0%, #1a5f57 100%); color: #ffffff; text-decoration: none; padding: 14px 36px; border-radius: 12px; font-weight: 600; font-size: 16px;">
+                  ${config.buttonText}
                 </a>
               </div>
               
-              <p style="margin: 24px 0; color: #4b5563; font-size: 16px;">
-                If you didn't request this verification, please ignore this email or contact our support team if you have concerns.
-              </p>
-              
               <!-- Security Notice -->
-              <div style="background-color: #f8fafc; border-radius: 12px; padding: 16px; margin: 32px 0; border-left: 4px solid #2a7d73;">
-                <p style="margin: 0; font-size: 14px; color: #64748b;">
-                  🔒 For your security, never share this verification code with anyone, including CineEase staff.
+              <div style="background-color: #f8fafc; border-radius: 12px; padding: 20px; margin: 32px 0 0 0; border: 1px solid #e2e8f0;">
+                <p style="margin: 0; font-size: 14px; color: #64748b; display: flex; align-items: center;">
+                  <span style="margin-right: 8px;">🔒</span>
+                  For your security, never share this code with anyone, including CineEase staff.
                 </p>
               </div>
             </div>
             
-            <!-- Featured Movies Section -->
-            <div style="background-color: #ffffff; border-radius: 16px; padding: 32px; margin: 24px 0; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
-              <h3 style="margin: 0 0 16px; color: #1a1a1a; font-size: 18px; font-weight: 600;">
-                Now Showing
-              </h3>
-              <p style="margin: 0; color: #4b5563; font-size: 14px;">
-                Don't miss out on the latest blockbusters! Book your tickets now and enjoy the best cinema experience.
-              </p>
-            </div>
-            
             <!-- Footer -->
-            <div style="text-align: center; padding: 32px 0; border-top: 1px solid #e2e8f0;">
-              <p style="margin: 0 0 16px; font-size: 14px; color: #64748b;">
+            <div style="text-align: center; padding-top: 24px; border-top: 1px solid #e2e8f0;">
+              <div style="margin-bottom: 24px;">
+                <a href="#" style="color: #2a7d73; text-decoration: none; margin: 0 12px; font-size: 14px; font-weight: 500;">Privacy</a>
+                <a href="#" style="color: #2a7d73; text-decoration: none; margin: 0 12px; font-size: 14px; font-weight: 500;">Terms</a>
+                <a href="#" style="color: #2a7d73; text-decoration: none; margin: 0 12px; font-size: 14px; font-weight: 500;">Support</a>
+              </div>
+              <p style="margin: 0 0 8px; font-size: 14px; color: #64748b;">
                 © ${new Date().getFullYear()} CineEase. All rights reserved.
               </p>
-              <p style="margin: 0 0 24px; font-size: 14px; color: #64748b;">
-                123 Cinema Street, Entertainment District, MB 12345
-              </p>
-              <div style="margin-bottom: 24px;">
-                <a href="#" style="color: #2a7d73; text-decoration: none; margin: 0 12px; font-size: 14px; font-weight: 500;">Privacy Policy</a>
-                <a href="#" style="color: #2a7d73; text-decoration: none; margin: 0 12px; font-size: 14px; font-weight: 500;">Terms of Service</a>
-                <a href="#" style="color: #2a7d73; text-decoration: none; margin: 0 12px; font-size: 14px; font-weight: 500;">Contact Us</a>
-              </div>
               <p style="margin: 0; font-size: 12px; color: #94a3b8;">
-                Please do not reply to this email. For assistance, please contact our support team.
+                This is an automated message, please do not reply.
               </p>
             </div>
           </div>
@@ -130,9 +133,10 @@ const createEmailTemplate = async (email, otp, isRegistration = false) => {
   }
 };
 
-// Export both functions using the same template
 module.exports = {
   sendLoginVerificationEmail: (email, otp) =>
-    createEmailTemplate(email, otp, false),
-  sendRegisterOtp: (email, otp) => createEmailTemplate(email, otp, true),
+    createEmailTemplate(email, otp, 'login'),
+  sendRegisterOtp: (email, otp) => createEmailTemplate(email, otp, 'register'),
+  sendPasswordResetOtp: (email, otp) =>
+    createEmailTemplate(email, otp, 'reset'),
 };

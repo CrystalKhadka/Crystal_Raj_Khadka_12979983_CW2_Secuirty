@@ -7,6 +7,7 @@ const zxcvbn = require('zxcvbn');
 const {
   sendLoginVerificationEmail,
   sendRegisterOtp,
+  sendPasswordResetOtp,
 } = require('../service/sendEmail');
 
 const createUser = async (req, res) => {
@@ -231,13 +232,7 @@ const loginUser = async (req, res) => {
       success: true,
       message: 'User logged in successfully',
 
-      userData: {
-        id: user._id,
-        username: user.username,
-        phoneNumber: user.phoneNumber,
-        email: user.email,
-        isAdmin: user.isAdmin,
-      },
+      token: token,
     });
   } catch (error) {
     console.error('Error logging in user:', error);
@@ -299,6 +294,7 @@ const verifyRegisterOTP = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: 'OTP verified successfully!',
+      token: token,
     });
   } catch (error) {
     console.log(error);
@@ -370,16 +366,16 @@ const verifyLoginOTP = async (req, res) => {
 const forgotPassword = async (req, res) => {
   console.log(req.body);
 
-  const { phoneNumber } = req.body;
+  const { email } = req.body;
 
-  if (!phoneNumber) {
+  if (!email) {
     return res.status(400).json({
       success: false,
       message: 'Please enter your phone number',
     });
   }
   try {
-    const user = await userModel.findOne({ phoneNumber: phoneNumber });
+    const user = await userModel.findOne({ email: email });
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -395,7 +391,7 @@ const forgotPassword = async (req, res) => {
     await user.save();
 
     // Send OTP to user phone number
-    const isSent = await sendOtp(phoneNumber, randomOTP);
+    const isSent = await sendPasswordResetOtp(email, randomOTP);
 
     if (!isSent) {
       return res.status(400).json({
@@ -420,9 +416,9 @@ const forgotPassword = async (req, res) => {
 const resetPassword = async (req, res) => {
   console.log(req.body);
 
-  const { phoneNumber, otp, password } = req.body;
+  const { email, otp, password } = req.body;
 
-  if (!phoneNumber || !otp || !password) {
+  if (!email || !otp || !password) {
     return res.status(400).json({
       success: false,
       message: 'Please enter all fields',
@@ -430,7 +426,7 @@ const resetPassword = async (req, res) => {
   }
 
   try {
-    const user = await userModel.findOne({ phoneNumber: phoneNumber });
+    const user = await userModel.findOne({ email: email });
     if (!user) {
       return res.status(400).json({
         success: false,
@@ -454,12 +450,46 @@ const resetPassword = async (req, res) => {
       });
     }
 
+    // Check password length
+    if (password.length < 8 || password.length > 16) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be between 8 and 16 characters.',
+      });
+    }
+
+    const passwordStrength = zxcvbn(password);
+
+    // Check if the password strength score is sufficient (e.g., 3 or higher)
+    if (passwordStrength.score < 3) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password is not strong enough. Try adding more complexity.',
+        suggestions: passwordStrength.feedback.suggestions, // Provide user-friendly suggestions
+      });
+    }
+
+    // Check if the password is already in the passwordList
+    for (let i = 0; i < user.oldPasswords.length; i++) {
+      if (await bcrypt.compare(password, user.oldPasswords[i])) {
+        return res.status(400).json({
+          success: false,
+          message: 'Password is already in use',
+        });
+      }
+    }
+
     const randomSalt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, randomSalt);
 
     user.password = hashedPassword;
     user.resetPasswordOTP = null;
     user.resetPasswordExpires = null;
+    //  if old passwords have five or more, remove the oldest one
+    if (user.oldPasswords.length >= 5) {
+      user.oldPasswords.shift();
+    }
+    user.oldPasswords.push(hashedPassword);
     await user.save();
 
     res.status(200).json({
@@ -518,10 +548,12 @@ const getSingleProfile = async (req, res) => {
         username: user.username,
         phoneNumber: user.phoneNumber,
         email: user.email,
-        password: 'Please update your password',
+        password: 'PasswordYoHoina',
         _id: user._id,
         isAdmin: user.isAdmin,
         rememberDevice: rememberDevice,
+        loginDevices: user.loginDevices,
+        rememberedDevices: user.rememberedDevices,
       },
     });
   } catch (error) {
