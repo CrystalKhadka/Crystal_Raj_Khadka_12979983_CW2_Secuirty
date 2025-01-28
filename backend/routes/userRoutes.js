@@ -26,9 +26,6 @@ router.get('/get_all_users', adminGuard, userController.getAllUsers);
 router.get('/get_single_profile', authGuard, userController.getSingleProfile);
 router.put('/update_profile', authGuard, userController.updateUser);
 
-//generate token
-router.post('/generate_token', publicGuard, userController.getToken);
-
 // verifyRegisterOTP
 router.put(
   '/verify_register_otp',

@@ -64,7 +64,7 @@ const initializeKhaltiPayment = async (details) => {
   };
 
   const bodyContent = JSON.stringify({
-    return_url: details.website_url + '/payment/success',
+    return_url: details.website_url + '/user/payment/success',
     website_url: details.website_url,
     amount: details.amount, // Amount in paisa
     purchase_order_id: details.itemId,

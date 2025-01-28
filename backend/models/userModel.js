@@ -81,7 +81,7 @@ userSchema.pre('save', function (next) {
 // Instance method to increment login attempts and lock account if necessary
 userSchema.methods.incrementLoginAttempts = async function () {
   const MAX_LOGIN_ATTEMPTS = 5; // Maximum allowed login attempts
-  const LOCK_TIME = 2 * 60 * 1000; // Lock duration in milliseconds (e.g., 2 minutes)
+  const LOCK_TIME = 5 * 60 * 1000; // Lock duration in milliseconds (e.g., 5 minutes)
 
   if (this.isLocked) {
     // Account is currently locked

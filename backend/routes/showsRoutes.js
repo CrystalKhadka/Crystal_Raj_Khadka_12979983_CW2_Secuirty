@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const showsController = require('../controllers/showsController');
 const { adminGuard, authGuard } = require('../middleware/authGuard');
-const { auth } = require('google-auth-library');
 
 router.post('/create', adminGuard, showsController.createShow);
 router.get('/get_all', authGuard, showsController.getAllShows);

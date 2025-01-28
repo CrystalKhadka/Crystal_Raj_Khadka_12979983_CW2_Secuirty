@@ -3,12 +3,11 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const sendOtp = require('../service/sendotp');
 const User = require('../models/userModel');
-const { OAuth2Client } = require('google-auth-library');
+const zxcvbn = require('zxcvbn');
 const {
   sendLoginVerificationEmail,
   sendRegisterOtp,
 } = require('../service/sendEmail');
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const createUser = async (req, res) => {
   // 1. Check incoming data
@@ -36,6 +35,25 @@ const createUser = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: 'User Already Exists!',
+      });
+    }
+
+    // Check password length
+    if (password.length < 8 || password.length > 16) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be between 8 and 16 characters.',
+      });
+    }
+
+    const passwordStrength = zxcvbn(password);
+
+    // Check if the password strength score is sufficient (e.g., 3 or higher)
+    if (passwordStrength.score < 3) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password is not strong enough. Try adding more complexity.',
+        suggestions: passwordStrength.feedback.suggestions, // Provide user-friendly suggestions
       });
     }
 
@@ -119,6 +137,14 @@ const loginUser = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: lockMessage,
+      });
+    }
+
+    // Check if the password has expired
+    if (user.passwordExpiresAt < Date.now()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password has expired. Please reset your password.',
       });
     }
 
@@ -528,6 +554,12 @@ const updateUser = async (req, res) => {
       const device = req.headers['user-agent'];
       user.rememberedDevices.push(device);
     }
+    if (!restBody.rememberDevice) {
+      const device = req.headers['user-agent'];
+      user.rememberedDevices = user.rememberedDevices.filter(
+        (d) => d !== device
+      );
+    }
 
     user.username = restBody.username;
     user.phoneNumber = restBody.phoneNumber;
@@ -589,105 +621,6 @@ const getToken = async (req, res) => {
   }
 };
 
-const googleLogin = async (req, res) => {
-  console.log(req.body);
-  // Destructuring the data
-  const { token } = req.body;
-  // Validate
-  if (!token) {
-    return res.status(400).json({
-      success: false,
-      message: 'Please fill all the fields',
-    });
-  }
-  // try catch
-  try {
-    // verify token
-    const ticket = await client.verifyIdToken({
-      idToken: token,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
-    const { email, given_name } = ticket.getPayload();
-    let user = await userModel.findOne({ email: email });
-    if (!user) {
-      const { password } = req.body;
-      const randomSalt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, randomSalt);
-      user = new userModel({
-        username: given_name,
-        email: email,
-        password: hashedPassword,
-        phoneNumber: '',
-      });
-      await user.save();
-    }
-    // generate token
-    const jwtToken = await jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      (options = {
-        expiresIn: Date.now() + 20 * 24 * 60 * 60 * 1000 || '1d',
-      })
-    );
-    return res.status(200).json({
-      success: true,
-      message: 'User Logged In Successfully!',
-      token: jwtToken,
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-      },
-    });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal Server Error!',
-      error: error,
-    });
-  }
-};
-const getUserByGoogleEmail = async (req, res) => {
-  console.log(req.body);
-  // Destructuring the data
-  const { token } = req.body;
-  // Validate
-  if (!token) {
-    return res.status(400).json({
-      success: false,
-      message: 'Please fill all the fields',
-    });
-  }
-  try {
-    // verify token
-    const ticket = await client.verifyIdToken({
-      idToken: token,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
-    const { email } = ticket.getPayload();
-    const user = await userModel.findOne({ email: email });
-    if (user) {
-      return res.status(200).json({
-        success: true,
-        message: 'User found',
-        data: user,
-      });
-    }
-    res.status(201).json({
-      success: false,
-      message: 'User not found',
-    });
-  } catch (e) {
-    console.log(e);
-    res.status(500).json({
-      success: false,
-      message: 'Internal Server Error',
-      error: e,
-    });
-  }
-};
-
 // Exporting
 module.exports = {
   createUser,
@@ -698,8 +631,6 @@ module.exports = {
   getSingleProfile,
   updateUser,
   getToken,
-  googleLogin,
-  getUserByGoogleEmail,
   verifyRegisterOTP,
   verifyLoginOTP,
 };

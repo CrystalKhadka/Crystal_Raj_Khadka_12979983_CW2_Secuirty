@@ -3,31 +3,20 @@ const mongoSanitize = require('mongo-sanitize');
 const Log = require('../models/logModel');
 const cookieParser = require('cookie-parser');
 
-/**
- * Utility function to extract token from cookies
- * @param {object} cookies - The request cookies
- * @returns {string|null} - Extracted token or null
- */
 const extractTokenFromCookies = (cookies) => {
-  return cookies?.token || null; // Replace 'token' with your cookie's key name if different
+  // Replace 'token' with your cookie's key name if different
+  return cookies?.token || null;
 };
 
-/**
- * Logs activity to MongoDB
- * @param {object} logData - Data to log
- */
 const logActivity = async (logData) => {
   try {
-    await Log.create(mongoSanitize(logData)); // Sanitize log data before saving
+    // Sanitize log data before saving
+    await Log.create(mongoSanitize(logData));
   } catch (err) {
     console.error('Failed to log activity:', err.message);
   }
 };
 
-/**
- * Middleware to handle public routes
- * Logs request details to MongoDB and sanitizes incoming data.
- */
 const publicGuard = async (req, res, next) => {
   // Sanitize incoming data
   req.body = mongoSanitize(req.body);
@@ -50,10 +39,6 @@ const publicGuard = async (req, res, next) => {
   next();
 };
 
-/**
- * Middleware to validate authentication
- * Logs authentication activity to MongoDB and sanitizes incoming data.
- */
 const authGuard = async (req, res, next) => {
   // Sanitize incoming data
   req.body = mongoSanitize(req.body);
@@ -80,7 +65,8 @@ const authGuard = async (req, res, next) => {
     }
 
     const decodedUserData = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = mongoSanitize(decodedUserData); // Sanitize decoded user data
+    // Sanitize decoded user data
+    req.user = mongoSanitize(decodedUserData);
 
     await logActivity({
       level: 'info',
@@ -113,10 +99,6 @@ const authGuard = async (req, res, next) => {
   }
 };
 
-/**
- * Middleware to validate admin access
- * Logs admin access activity to MongoDB and sanitizes incoming data.
- */
 const adminGuard = async (req, res, next) => {
   // Sanitize incoming data
   req.body = mongoSanitize(req.body);
