@@ -9,15 +9,16 @@ const {
   sendRegisterOtp,
   sendPasswordResetOtp,
 } = require('../service/sendEmail');
+const axios = require('axios');
 
 const createUser = async (req, res) => {
-  // 1. Check incoming data
+  // Check incoming data
   console.log(req.body);
 
-  // 2. Destructure the incoming data
+  // Destructure the incoming data
   const { email, username, phoneNumber, password } = req.body;
 
-  // 3. Validate the data (if empty, stop the process and send response)
+  // Validate the data (if empty, stop the process and send response)
   if (!username || !phoneNumber || !email || !password) {
     // res.send("Please enter all fields!")
     return res.json({
@@ -26,12 +27,12 @@ const createUser = async (req, res) => {
     });
   }
 
-  // 4. Error Handling (Try Catch)
+  // Error Handling (Try Catch)
   try {
-    // 5. Check if the user is already registered
+    // Check if the user is already registered
     const existingUser = await userModel.findOne({ email: email });
 
-    // 5.1 if user found: Send response
+    // if user found: Send response
     if (existingUser) {
       return res.status(400).json({
         success: false,
@@ -40,10 +41,18 @@ const createUser = async (req, res) => {
     }
 
     // Check password length
-    if (password.length < 8 || password.length > 16) {
+    if (password.length < 8) {
       return res.status(400).json({
         success: false,
-        message: 'Password must be between 8 and 16 characters.',
+        message: 'Password must be above 8 characters.',
+      });
+    }
+
+    // Check if the password contains part of username
+    if (password.includes(username)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password cannot contain username.',
       });
     }
 
@@ -62,19 +71,41 @@ const createUser = async (req, res) => {
     const randomSalt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, randomSalt);
 
+    let passwordList = [];
+    passwordList.push(hashedPassword);
+
+    // Set password expires in 90 days
+    const passwordExpiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
+
     // 5.2 if user is new:
     const newUser = new userModel({
-      // Database Fields  : Client's Value
       username: username,
       phoneNumber: phoneNumber,
       email: email,
       password: hashedPassword,
-      oldPasswords: [hashedPassword],
-      passwordExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+      oldPasswords: passwordList,
+      isAdmin: false,
+      passwordExpiresAt: passwordExpiresAt,
+      isVerified: false,
     });
 
     console.log(newUser);
 
+    const randomOTP = Math.floor(100000 + Math.random() * 900000);
+    console.log(randomOTP);
+
+    newUser.verifyOTP = randomOTP;
+    newUser.verifyExpires = Date.now() + 10 * 60 * 1000; // OTP valid for 10 minutes
+
+    // Send OTP to the user's email
+    const sent = await sendRegisterOtp(email, randomOTP);
+
+    if (!sent) {
+      return res.status(500).json({
+        success: false,
+        message: 'OTP send failed',
+      });
+    }
     // Save to database
     await newUser.save();
 
@@ -95,8 +126,15 @@ const createUser = async (req, res) => {
 const loginUser = async (req, res) => {
   console.log(req.body); // Log incoming data for debugging
 
-  const { email, password } = req.body;
+  const { email, password, captchaToken } = req.body;
   const device = req.headers['user-agent']; // Identify the device using User-Agent
+
+  if (!captchaToken) {
+    return res.status(400).json({
+      success: false,
+      message: 'Please confirm that you are not a robot.',
+    });
+  }
 
   if (!email || !password) {
     return res.status(400).json({
@@ -106,6 +144,16 @@ const loginUser = async (req, res) => {
   }
 
   try {
+    // Validate the captcha token
+    const captchaSuccess = await validateCaptcha(captchaToken);
+
+    if (!captchaSuccess.success) {
+      return res.status(400).json({
+        success: false,
+        message: captchaSuccess.message,
+      });
+    }
+
     const user = await userModel.findOne({ email: email });
 
     if (!user) {
@@ -402,7 +450,7 @@ const forgotPassword = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'OTP sent to your phone number',
+      message: 'OTP sent to your email',
     });
   } catch (error) {
     console.log(error);
@@ -490,6 +538,7 @@ const resetPassword = async (req, res) => {
       user.oldPasswords.shift();
     }
     user.oldPasswords.push(hashedPassword);
+    user.passwordExpiresAt = Date.now() + 1000 * 60 * 60 * 24 * 90;
     await user.save();
 
     res.status(200).json({
@@ -548,7 +597,6 @@ const getSingleProfile = async (req, res) => {
         username: user.username,
         phoneNumber: user.phoneNumber,
         email: user.email,
-        password: 'PasswordYoHoina',
         _id: user._id,
         isAdmin: user.isAdmin,
         rememberDevice: rememberDevice,
@@ -650,6 +698,39 @@ const getToken = async (req, res) => {
       message: 'Internal Server Error',
       error: error,
     });
+  }
+};
+
+const validateCaptcha = async (recaptchaToken) => {
+  try {
+    const response = await axios.post(
+      'https://www.google.com/recaptcha/api/siteverify',
+      null,
+      {
+        params: {
+          secret: process.env.RECAPTCHA_SECRET_KEY,
+          response: recaptchaToken,
+        },
+      }
+    );
+    if (response.data.success) {
+      return {
+        success: true,
+        message: 'Captcha Validated',
+      };
+    } else {
+      return {
+        success: false,
+        message: 'Invalid Captcha',
+      };
+    }
+  } catch (error) {
+    console.log(error);
+    return {
+      success: false,
+      message: 'Internal Server Error',
+      error: error,
+    };
   }
 };
 

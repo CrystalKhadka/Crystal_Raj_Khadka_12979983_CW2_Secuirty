@@ -93,7 +93,7 @@ userSchema.methods.incrementLoginAttempts = async function () {
   if (this.loginAttempts >= MAX_LOGIN_ATTEMPTS) {
     // Lock the account
     this.accountLockUntil = Date.now() + LOCK_TIME;
-  }
+  } 
 
   await this.save();
 };

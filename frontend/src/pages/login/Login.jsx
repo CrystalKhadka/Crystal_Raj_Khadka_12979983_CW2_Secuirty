@@ -25,6 +25,7 @@ import {
   useTheme,
 } from '@mui/material';
 import React, { useMemo, useState } from 'react';
+import ReCAPTCHA from 'react-google-recaptcha';
 import { toast } from 'react-toastify';
 import zxcvbn from 'zxcvbn';
 
@@ -136,6 +137,7 @@ const Login = () => {
   const [openVerificationModal, setOpenVerificationModal] = useState(false);
   const [openRegisterVerificationModal, setOpenRegisterVerificationModal] =
     useState(false);
+  const [captchaToken, setCaptchaToken] = useState(null);
 
   const handleVerification = (otpString) => {
     console.log(otpString);
@@ -246,7 +248,7 @@ const Login = () => {
 
     setIsLoading(true);
     try {
-      const res = await loginUserApi({ email, password });
+      const res = await loginUserApi({ email, password, captchaToken });
       if (res.data.registerOtpRequired) {
         setOpenRegisterVerificationModal(true);
       } else if (res.data.otpRequired) {
@@ -426,6 +428,12 @@ const Login = () => {
                       </InputAdornment>
                     ),
                   }}
+                />
+
+                {/* Apply recaptcha */}
+                <ReCAPTCHA
+                  sitekey='6LdK0MUqAAAAAK0fwfII18EY4NaVCxEv0CwZnKq-' // Replace with your site key
+                  onChange={(token) => setCaptchaToken(token)} // Captures the token
                 />
 
                 <Box

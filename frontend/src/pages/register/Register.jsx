@@ -118,6 +118,11 @@ const Register = () => {
       isValid = false;
     }
 
+    if (formData.password.includes(formData.username)) {
+      newErrors.password = 'Password cannot contain username';
+      isValid = false;
+    }
+
     if (formData.confirmPassword !== formData.password) {
       newErrors.confirmPassword = "Passwords don't match";
       isValid = false;
