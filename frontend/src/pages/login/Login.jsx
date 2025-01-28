@@ -255,6 +255,7 @@ const Login = () => {
         setOpenVerificationModal(true);
       } else {
         toast.success(res.data.message);
+        localStorage.setItem('token', res.data.token);
         window.location.href = '/homepage';
       }
     } catch (err) {

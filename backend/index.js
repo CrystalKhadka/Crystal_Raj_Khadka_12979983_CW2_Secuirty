@@ -11,6 +11,8 @@ const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
+const session = require('express-session');
+const MongoStore = require('connect-mongo');
 // Load environment variables from .env file
 dotenv.config();
 
@@ -86,6 +88,22 @@ connectDatabase();
 
 // File public
 app.use(express.static('./public'));
+
+// Configuring session
+app.use(
+  session({
+    secret: process.env.session_secret,
+    resave: false,
+    saveUninitialized: false,
+
+    cookie: {
+      secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
+      httpOnly: false, // Prevents JavaScript access to cookies
+      sameSite: 'strict', // Protects against CSRF
+      maxAge: 1000 * 60 * 60 * 24 * 10, // 10 days
+    },
+  })
+);
 
 // Defining the port
 const PORT = process.env.PORT || 5000;

@@ -81,10 +81,11 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
 
   if (error) {
     return (
-      <ErrorView
-        message={error}
-        link='/login'
-        linkText='Return to Login'
+      //  Return to login
+      <Navigate
+        to='/login'
+        state={{ from: location }}
+        replace
       />
     );
   }
@@ -113,13 +114,16 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     allowedRoles.length > 0 &&
     !allowedRoles.includes(user.isAdmin ? 'admin' : 'user')
   ) {
-    return (
-      <ErrorView
-        message="You don't have permission to access this page."
-        link='/'
-        linkText='Return to Home'
-      />
-    );
+    // Navigate to home if user is not admin
+    if (!user.isAdmin) {
+      return (
+        <Navigate
+          to='/'
+          state={{ from: location }}
+          replace
+        />
+      );
+    }
   }
 
   return (

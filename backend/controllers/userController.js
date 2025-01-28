@@ -11,6 +11,18 @@ const {
 } = require('../service/sendEmail');
 const axios = require('axios');
 
+const crypto = require('crypto-js');
+
+const encrypt = (text) => {
+  return crypto.AES.encrypt(text, process.env.ENCRYPTION_KEY).toString();
+};
+
+const decrypt = (text) => {
+  return crypto.AES.decrypt(text, process.env.ENCRYPTION_KEY).toString(
+    crypto.enc.Utf8
+  );
+};
+
 const createUser = async (req, res) => {
   // Check incoming data
   console.log(req.body);
@@ -77,10 +89,14 @@ const createUser = async (req, res) => {
     // Set password expires in 90 days
     const passwordExpiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
 
+    // encrypt the username and phone
+    const encryptedUsername = encrypt(username);
+    const encryptedPhoneNumber = encrypt(phoneNumber);
+
     // 5.2 if user is new:
     const newUser = new userModel({
-      username: username,
-      phoneNumber: phoneNumber,
+      username: encryptedUsername,
+      phoneNumber: encryptedUsername,
       email: email,
       password: hashedPassword,
       oldPasswords: passwordList,
@@ -265,22 +281,40 @@ const loginUser = async (req, res) => {
     const token = jwt.sign(
       { id: user._id, isAdmin: user.isAdmin },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRY }
+      { expiresIn: process.env.JWT_EXPIRY },
+      (err, token) => {
+        if (err) {
+          console.error('Error generating token:', err);
+          return res
+            .status(500)
+            .json({ success: false, message: 'Internal server error' });
+        }
+        return token;
+      }
     );
 
-    res.cookie('token', token, {
-      httpOnly: true, // Secure against XSS attacks
-      secure: true, // Only sent over HTTPS
-      sameSite: 'Strict', // Prevents CSRF attacks
-      maxAge: 60 * 60 * 1000, // Expires in 1 hour
-    });
+    // Set the session
+    req.session.regenerate((err) => {
+      if (err) {
+        console.error('Failed to regenerate session:', err);
+        return res
+          .status(500)
+          .json({ success: false, message: 'Internal server error' });
+      }
 
-    // Respond with the token
-    res.status(200).json({
-      success: true,
-      message: 'User logged in successfully',
+      req.session.user = {
+        id: user._id,
+        email: user.email,
+        isAdmin: user.isAdmin,
+      };
 
-      token: token,
+      // Send the response with both session and token
+      res.status(200).json({
+        success: true,
+        message: 'Login successful',
+        user: { id: user._id, email: user.email, isAdmin: user.isAdmin },
+        token, // Include the token in the response
+      });
     });
   } catch (error) {
     console.error('Error logging in user:', error);
@@ -328,21 +362,33 @@ const verifyRegisterOTP = async (req, res) => {
       { expiresIn: process.env.JWT_EXPIRY }
     );
 
-    res.cookie('token', token, {
-      httpOnly: true, // Secure against XSS attacks
-      secure: true, // Only sent over HTTPS
-      sameSite: 'Strict', // Prevents CSRF attacks
-      maxAge: 60 * 60 * 1000, // Expires in 1 hour
-    });
-
     user.loginDevices.push(device);
     user.verifyOTP = null;
     user.verifyExpires = null;
     await user.save();
-    return res.status(200).json({
-      success: true,
-      message: 'OTP verified successfully!',
-      token: token,
+
+    // Set the session
+    req.session.regenerate((err) => {
+      if (err) {
+        console.error('Failed to regenerate session:', err);
+        return res
+          .status(500)
+          .json({ success: false, message: 'Internal server error' });
+      }
+
+      req.session.user = {
+        id: user._id,
+        email: user.email,
+        isAdmin: user.isAdmin,
+      };
+
+      // Send the response with both session and token
+      res.status(200).json({
+        success: true,
+        message: 'Login successful',
+        user: { id: user._id, email: user.email, isAdmin: user.isAdmin },
+        token, // Include the token in the response
+      });
     });
   } catch (error) {
     console.log(error);
@@ -390,16 +436,28 @@ const verifyLoginOTP = async (req, res) => {
       { expiresIn: process.env.JWT_EXPIRY }
     );
 
-    res.cookie('token', token, {
-      httpOnly: true, // Secure against XSS attacks
-      secure: true, // Only sent over HTTPS
-      sameSite: 'Strict', // Prevents CSRF attacks
-      maxAge: 60 * 60 * 1000, // Expires in 1 hour
-    });
-    return res.status(200).json({
-      success: true,
-      message: 'OTP verified successfully!',
-      token: token,
+    // Set the session
+    req.session.regenerate((err) => {
+      if (err) {
+        console.error('Failed to regenerate session:', err);
+        return res
+          .status(500)
+          .json({ success: false, message: 'Internal server error' });
+      }
+
+      req.session.user = {
+        id: user._id,
+        email: user.email,
+        isAdmin: user.isAdmin,
+      };
+
+      // Send the response with both session and token
+      res.status(200).json({
+        success: true,
+        message: 'Login successful',
+        user: { id: user._id, email: user.email, isAdmin: user.isAdmin },
+        token, // Include the token in the response
+      });
     });
   } catch (error) {
     console.log(error);

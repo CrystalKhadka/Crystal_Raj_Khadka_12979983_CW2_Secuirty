@@ -1,18 +1,30 @@
 import axios from 'axios';
 
 // Function to extract token from cookies
-const getTokenFromCookies = () => {
-  const cookie = document.cookie
-    .split('; ')
-    .find((row) => row.startsWith('token='));
-  return cookie ? cookie.split('=')[1] : null;
-};
 
 // Create an Axios instance
 const Api = axios.create({
   baseURL: process.env.REACT_APP_API_URL || 'https://localhost:5000', // Use environment variable for base URL
   withCredentials: true, // Include cookies in requests
 });
+
+Api.interceptors.request.use(
+  async (config) => {
+    // Example: Get the token from local storage or any secure storage
+    const token = localStorage.getItem('token'); // Replace with your token retrieval logic
+
+    if (token) {
+      // Attach token to the Authorization header
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    return config;
+  },
+  (error) => {
+    // Handle errors before sending the request
+    return Promise.reject(error);
+  }
+);
 
 // API Endpoints
 export const registerUserApi = (data) => Api.post('/api/user/create', data);
