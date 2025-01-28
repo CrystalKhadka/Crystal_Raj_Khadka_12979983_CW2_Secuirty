@@ -1,22 +1,10 @@
 import {
-  DateRange,
-  KeyboardArrowLeft,
-  KeyboardArrowRight,
-  LocationOn,
-  Search,
-} from '@mui/icons-material';
-import {
   Alert,
-  Box,
-  Button,
   Container,
   Grid,
-  InputAdornment,
-  MobileStepper,
   Paper,
   Skeleton,
   Snackbar,
-  TextField,
   Typography,
   useMediaQuery,
   useTheme,
@@ -177,14 +165,12 @@ const Homepage = () => {
   return (
     <Container
       maxWidth='lg'
-      sx={{ mt: 10, mb: 4 }}>
+      sx={{ mt: 10, mb: 2 }}>
       <Paper
-        elevation={3}
+        elevation={0}
         sx={{
-          p: { xs: 2, md: 4 },
+          p: { xs: 2, md: 2 },
           mb: 4,
-          background: theme.palette.grey[50],
-          borderRadius: 2,
         }}>
         <Typography
           variant={isMobile ? 'h4' : 'h3'}
@@ -194,138 +180,7 @@ const Homepage = () => {
           sx={{ fontWeight: 'bold' }}>
           Welcome to CineEase
         </Typography>
-
-        <Box sx={{ maxWidth: 600, mx: 'auto', mb: 3 }}>
-          <TextField
-            fullWidth
-            variant='outlined'
-            placeholder='Search movies...'
-            value={searchTerm}
-            onChange={handleSearchChange}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position='start'>
-                  <Search color='primary' />
-                </InputAdornment>
-              ),
-            }}
-          />
-        </Box>
-
-        <Grid
-          container
-          spacing={2}
-          justifyContent='center'>
-          <Grid
-            item
-            xs={12}
-            sm={6}
-            md={4}>
-            <TextField
-              fullWidth
-              variant='outlined'
-              placeholder='Select date'
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position='start'>
-                    <DateRange color='primary' />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </Grid>
-          <Grid
-            item
-            xs={12}
-            sm={6}
-            md={4}>
-            <TextField
-              fullWidth
-              variant='outlined'
-              placeholder='Select location'
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position='start'>
-                    <LocationOn color='primary' />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </Grid>
-        </Grid>
       </Paper>
-
-      <Box sx={{ maxWidth: '100%', flexGrow: 1, mb: 4 }}>
-        <Paper
-          elevation={4}
-          sx={{ position: 'relative', borderRadius: 2, overflow: 'hidden' }}>
-          <Box
-            sx={{
-              position: 'relative',
-              overflow: 'hidden',
-            }}>
-            {carouselImages.map((step, index) => (
-              <Box
-                key={step.label}
-                sx={{
-                  display: activeStep === index ? 'block' : 'none',
-                  transition: 'opacity 0.5s ease-in-out',
-                }}>
-                <Box
-                  component='img'
-                  sx={{
-                    height: { xs: 250, sm: 350, md: 450 },
-                    display: 'block',
-                    maxWidth: '100%',
-                    overflow: 'hidden',
-                    width: '100%',
-                    objectFit: 'cover',
-                    transition: 'transform 0.3s ease-in-out',
-                    '&:hover': {
-                      transform: 'scale(1.02)',
-                    },
-                  }}
-                  src={step.url}
-                  alt={step.label}
-                />
-              </Box>
-            ))}
-          </Box>
-          <MobileStepper
-            steps={maxSteps}
-            position='static'
-            activeStep={activeStep}
-            sx={{
-              background: theme.palette.background.paper,
-              '& .MuiMobileStepper-dot': {
-                width: 8,
-                height: 8,
-                transition: 'all 0.3s ease',
-              },
-              '& .MuiMobileStepper-dotActive': {
-                width: 12,
-                height: 12,
-              },
-            }}
-            nextButton={
-              <Button
-                size='small'
-                onClick={handleNext}>
-                Next
-                <KeyboardArrowRight />
-              </Button>
-            }
-            backButton={
-              <Button
-                size='small'
-                onClick={handleBack}>
-                <KeyboardArrowLeft />
-                Back
-              </Button>
-            }
-          />
-        </Paper>
-      </Box>
 
       <Typography
         variant='h4'

@@ -16,7 +16,6 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import { googleLogout } from '@react-oauth/google';
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { getSingleProfileApi } from '../apis/Api';
@@ -32,7 +31,7 @@ const Navbar = () => {
   const handleLogout = () => {
     localStorage.removeItem('user');
     localStorage.removeItem('token');
-    googleLogout();
+
     window.location.href = '/login';
   };
 

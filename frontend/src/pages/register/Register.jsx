@@ -66,6 +66,7 @@ const Register = () => {
     setErrors({ ...errors, [field]: '' });
 
     if (field === 'password') {
+      // Evaluate password strength using regex
       const strength = zxcvbn(value);
       setPasswordStrength({
         score: strength.score,
@@ -106,7 +107,12 @@ const Register = () => {
       isValid = false;
     }
 
-    if (passwordStrength.score < 2) {
+    if (passwordRegex.test(formData.password)) {
+      newErrors.password = 'Password must contain at least 8 characters';
+      isValid = false;
+    }
+
+    if (passwordStrength.score < 3) {
       newErrors.password =
         'Password is too weak. Please choose a stronger password.';
       isValid = false;

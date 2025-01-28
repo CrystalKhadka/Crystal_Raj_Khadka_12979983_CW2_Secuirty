@@ -28,8 +28,7 @@ export const updateMovieApi = (id, data) =>
 export const pagination = (page, limit) =>
   Api.get(`/api/movie/pagination/?page=${page}&limit=${limit}`);
 export const getMovieCount = () => Api.get('/api/movie/get_movies_count');
-export const buyTicketsApi = (id, data) =>
-  Api.post(`/api/movie/buy_tickets/${id}`, data);
+export const buyTicketsApi = (data) => Api.post(`/api/booking/create`, data);
 export const addShowsApi = (data) => Api.post('/api/shows/create', data);
 export const getAllShowsApi = () => Api.get('/api/shows/get_all');
 export const getShowByMovieIdApi = (id) =>
@@ -53,10 +52,6 @@ export const deleteProfileApi = (id) =>
   Api.delete(`/api/user/delete_profile/${id}`);
 export const updateProfileApi = (data) =>
   Api.put('/api/user/update_profile', data);
-export const loginWithGoogleApi = (data) =>
-  Api.post('/api/user/google_login', data);
-export const getUserByGoogleEmailApi = (data) =>
-  Api.post('/api/user/get_user_by_google_email', data);
 export const initializeKhaltiApi = (data) =>
   Api.post('/api/payment/initialize_khalti', data);
 export const contactUsApi = (data) => Api.post('/api/contact/create', data);

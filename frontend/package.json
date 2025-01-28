@@ -25,7 +25,6 @@
     "lucide-react": "^0.414.0",
     "qrcode.react": "^3.1.0",
     "react": "^18.3.1",
-    "react-bootstrap": "^2.10.4",
     "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.3.1",
     "react-icons": "^5.2.1",
@@ -42,8 +41,9 @@
     "zxcvbn": "^4.4.2"
   },
   "scripts": {
-    "start": "set HTTPS=true&&set SSL_CRT_FILE=./certificate/server.crt&&set SSL_KEY_FILE=./certificate/server.key&&react-scripts start",
-    "build": "react-scripts build",
+    "start": "cross-env HTTPS=true SSL_CRT_FILE=./certificate/server.crt SSL_KEY_FILE=./certificate/server.key react-scripts start",
+    "build": "set \"GENERATE_SOURCEMAP=false\" && react-scripts build",
+    "deploy": "serve -s build --listen 3000 --ssl-cert ./certificate/server.crt --ssl-key ./certificate/server.key",
     "test": "react-scripts test --transformIgnorePatterns \"node_modules/(?!axios)/\"",
     "eject": "react-scripts eject"
   },
@@ -68,6 +68,7 @@
   "devDependencies": {
     "@testing-library/jest-dom": "^6.4.8",
     "@testing-library/react": "^16.0.0",
+    "cross-env": "^7.0.3",
     "jest": "^27.5.1"
   }
 }
