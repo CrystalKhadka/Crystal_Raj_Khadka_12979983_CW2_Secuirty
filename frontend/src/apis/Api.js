@@ -22,6 +22,23 @@ Api.interceptors.request.use(
   },
   (error) => {
     // Handle errors before sending the request
+
+    return Promise.reject(error);
+  }
+);
+
+Api.interceptors.response.use(
+  (response) => {
+    // Handle successful responses
+    return response;
+  },
+  (error) => {
+    // Handle errors
+    if (error.response.status === 401) {
+      // Token expired or invalid, redirect to login page
+      localStorage.removeItem('token');
+    }
+
     return Promise.reject(error);
   }
 );
@@ -90,3 +107,9 @@ export const uploadProfilePictureApi = (data) =>
       'Content-Type': 'multipart/form-data',
     },
   });
+
+// logout
+export const logoutApi = () => Api.post('/api/user/logout');
+
+// delete user
+export const deleteUserApi = () => Api.delete(`/api/user/delete`);

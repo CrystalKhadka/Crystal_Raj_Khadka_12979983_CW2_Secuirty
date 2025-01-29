@@ -17,8 +17,8 @@ import {
   useTheme,
 } from '@mui/material';
 import React, { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { getSingleProfileApi } from '../apis/Api';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { getSingleProfileApi, logoutApi } from '../apis/Api';
 
 const Navbar = () => {
   const location = useLocation();
@@ -28,11 +28,14 @@ const Navbar = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const navigate = useNavigate();
   const handleLogout = () => {
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
-
-    window.location.href = '/login';
+    logoutApi()
+      .then(() => {
+        localStorage.removeItem('token');
+        navigate('/login', { replace: true });
+      })
+      .catch((error) => console.log(error));
   };
 
   useEffect(() => {

@@ -20,7 +20,7 @@ import {
 } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { getSingleProfileApi } from '../apis/Api';
+import { getSingleProfileApi, logoutApi } from '../apis/Api';
 
 const DRAWER_WIDTH = 280;
 
@@ -73,9 +73,12 @@ const AdminNavbar = () => {
   }, []);
 
   const handleLogout = () => {
-    document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-
-    navigate('/login', { replace: true });
+    logoutApi()
+      .then(() => {
+        localStorage.removeItem('token');
+        navigate('/login', { replace: true, state: { from: location } });
+      })
+      .catch((error) => console.log(error));
   };
 
   return (

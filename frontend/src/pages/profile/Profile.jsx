@@ -15,10 +15,12 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material';
+import DOMPurify from 'dompurify';
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import {
+  deleteUserApi,
   getSingleProfileApi,
   updateProfileApi,
   uploadProfilePictureApi,
@@ -28,6 +30,7 @@ const Profile = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const { id } = useParams();
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     username: '',
@@ -39,7 +42,6 @@ const Profile = () => {
     address: '',
   });
 
-  const [showPassword, setShowPassword] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -63,9 +65,18 @@ const Profile = () => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+    // DOMPurify to sanitize user input
+    // Allow only text, numbers, and spaces
+    // Remove the tag
+
+    const sanitizedValue = DOMPurify.sanitize(value, {
+      // Remove the input if not text, number, or space
+      ALLOWED_TAGS: [],
+    });
+
     setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: type === 'checkbox' ? checked : sanitizedValue,
     }));
   };
 
@@ -271,25 +282,27 @@ const Profile = () => {
                 }}>
                 Save Changes
               </Button>
-              <Button
-                type='button'
-                variant='contained'
-                color='secondary'
-                size='large'
-                sx={{
-                  px: 6,
-                  py: 1.5,
-                  borderRadius: 2,
-                  textTransform: 'none',
-                  fontSize: '1.1rem',
-                }}>
-                Change Password
-              </Button>
+
               <Button
                 type='button'
                 variant='contained'
                 color='error'
                 size='large'
+                onClick={() => {
+                  deleteUserApi()
+                    .then((res) => {
+                      if (res.status === 200) {
+                        toast.success('User deleted successfully');
+                        localStorage.removeItem('rememberedDevice');
+                        navigate('/login', { replace: true });
+                      }
+                    })
+                    .catch((error) => {
+                      toast.error(
+                        error.response?.data?.message || 'Delete failed'
+                      );
+                    });
+                }}
                 sx={{
                   px: 6,
                   py: 1.5,

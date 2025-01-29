@@ -1,8 +1,4 @@
-import {
-  Delete as DeleteIcon,
-  Edit as EditIcon,
-  Search as SearchIcon,
-} from '@mui/icons-material';
+import { Search as SearchIcon } from '@mui/icons-material';
 import {
   Alert,
   Box,
@@ -13,7 +9,6 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  IconButton,
   Paper,
   Table,
   TableBody,
@@ -132,7 +127,6 @@ const CustomerManagement = () => {
                     <TableCell>Username</TableCell>
                     <TableCell>Email</TableCell>
                     <TableCell>Phone Number</TableCell>
-                    <TableCell align='right'>Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -143,20 +137,6 @@ const CustomerManagement = () => {
                       <TableCell>{user.username}</TableCell>
                       <TableCell>{user.email}</TableCell>
                       <TableCell>{user.phoneNumber}</TableCell>
-                      <TableCell align='right'>
-                        <IconButton
-                          color='primary'
-                          size='small'
-                          sx={{ mr: 1 }}>
-                          <EditIcon />
-                        </IconButton>
-                        <IconButton
-                          color='error'
-                          size='small'
-                          onClick={() => handleDeleteClick(user)}>
-                          <DeleteIcon />
-                        </IconButton>
-                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
