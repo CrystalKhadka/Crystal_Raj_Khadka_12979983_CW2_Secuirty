@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { sanitizeInput } = require('../service/purify');
 
 const userSchema = new mongoose.Schema(
   {
@@ -74,6 +75,19 @@ const userSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+userSchema.pre('save', function (next) {
+  // Sanitize the data
+  if (this.device && Array.isArray(this.device)) {
+    this.device = this.device.map((item) => sanitizeInput(item));
+  }
+  if (this.rememberedDevice && Array.isArray(this.rememberedDevice)) {
+    this.rememberedDevice = this.rememberedDevice.map((item) =>
+      sanitizeInput(item)
+    );
+  }
+  next();
+});
 
 // Define a virtual property to check if the account is locked
 userSchema.virtual('isLocked').get(function () {

@@ -26,6 +26,7 @@ const publicGuard = async (req, res, next) => {
   req.body = mongoSanitize(req.body);
   req.query = mongoSanitize(req.query);
   req.params = mongoSanitize(req.params);
+  req.device = mongoSanitize(req.device);
 
   await logActivity({
     level: 'info',
@@ -49,6 +50,7 @@ const authGuard = async (req, res, next) => {
   req.body = mongoSanitize(req.body);
   req.query = mongoSanitize(req.query);
   req.params = mongoSanitize(req.params);
+  req.device = mongoSanitize(req.device);
 
   try {
     if (req.session.user) {
@@ -63,6 +65,8 @@ const authGuard = async (req, res, next) => {
         user: req.user.email,
         ip: req.ip,
       });
+
+      console.log(req.user);
       return next();
     }
 
@@ -125,6 +129,7 @@ const adminGuard = async (req, res, next) => {
   req.body = mongoSanitize(req.body);
   req.query = mongoSanitize(req.query);
   req.params = mongoSanitize(req.params);
+  req.device = mongoSanitize(req.device);
 
   try {
     if (req.session.user) {
@@ -154,6 +159,8 @@ const adminGuard = async (req, res, next) => {
         user: req.user.email,
         ip: req.ip,
       });
+
+      console.log(req.user);
 
       return next();
     }

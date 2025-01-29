@@ -43,5 +43,11 @@ router.post(
   userController.uploadProfilePicture
 );
 
+// delete
+router.delete('/delete', authGuard, userController.deleteUser);
+
+// logout
+router.post('/logout', authGuard, userController.logoutUser);
+
 // exporting the router
 module.exports = router;

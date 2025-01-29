@@ -841,6 +841,69 @@ const validateCaptcha = async (recaptchaToken) => {
   }
 };
 
+// delete user
+const deleteUser = async (req, res) => {
+  const id = req.user.id;
+  try {
+    const user = await userModel.findByIdAndDelete(id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: 'User deleted successfully',
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error,
+    });
+  }
+};
+
+// logoutUser
+const logoutUser = async (req, res) => {
+  try {
+    res.clearCookie('token');
+    // make the session expired
+    req.session.destroy();
+
+    // clear the session cookie
+    res.clearCookie('connect.sid');
+
+    // remove the device from the database
+    const user = await userModel.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+    user.loginDevices = user.loginDevices.filter(
+      (device) => device !== req.headers['user-agent']
+    );
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'User logged out successfully',
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error,
+    });
+  }
+};
+
 // Exporting
 module.exports = {
   createUser,
@@ -854,4 +917,6 @@ module.exports = {
   verifyRegisterOTP,
   verifyLoginOTP,
   uploadProfilePicture,
+  deleteUser,
+  logoutUser,
 };
