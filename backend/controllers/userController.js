@@ -10,6 +10,8 @@ const {
   sendPasswordResetOtp,
 } = require('../service/sendEmail');
 const axios = require('axios');
+const fs = require('fs');
+const path = require('path');
 
 const crypto = require('crypto-js');
 
@@ -278,21 +280,6 @@ const loginUser = async (req, res) => {
     user.loginDevices.push(device);
     await user.save();
 
-    const token = jwt.sign(
-      { id: user._id, isAdmin: user.isAdmin },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRY },
-      (err, token) => {
-        if (err) {
-          console.error('Error generating token:', err);
-          return res
-            .status(500)
-            .json({ success: false, message: 'Internal server error' });
-        }
-        return token;
-      }
-    );
-
     // Set the session
     req.session.regenerate((err) => {
       if (err) {
@@ -308,8 +295,16 @@ const loginUser = async (req, res) => {
         isAdmin: user.isAdmin,
       };
 
+      const token = jwt.sign(
+        { id: user._id, isAdmin: user.isAdmin },
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.JWT_EXPIRY }
+      );
+
+      console.log(token);
+
       // Send the response with both session and token
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         message: 'Login successful',
         user: { id: user._id, email: user.email, isAdmin: user.isAdmin },
@@ -648,19 +643,66 @@ const getSingleProfile = async (req, res) => {
     const device = req.headers['user-agent'];
     const rememberDevice = user.rememberedDevices.includes(device);
 
+    const username = await decrypt(user.username);
+    const phoneNumber = await decrypt(user.phoneNumber);
+    const address = user.address && (await decrypt(user.address));
+
     res.status(200).json({
       success: true,
       message: 'User fetched',
       user: {
-        username: user.username,
-        phoneNumber: user.phoneNumber,
+        username: username,
+        phoneNumber: phoneNumber,
+        address: address,
         email: user.email,
         _id: user._id,
         isAdmin: user.isAdmin,
         rememberDevice: rememberDevice,
         loginDevices: user.loginDevices,
         rememberedDevices: user.rememberedDevices,
+        avatar: user.avatar,
       },
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error,
+    });
+  }
+};
+
+// Upload Profile Picture
+const uploadProfilePicture = async (req, res) => {
+  const id = req.user.id;
+  const { avatar } = req.files;
+
+  try {
+    const user = await userModel.findById(id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+    const username = await decrypt(user.username);
+    const imageName = `${Date.now()}-${username}-${avatar.name}`;
+    const imageUploadPath = path.join(
+      __dirname,
+      `../public/avatar/${imageName}`
+    );
+
+    // Create the directory if it doesn't exist
+    if (!fs.existsSync(path.dirname(imageUploadPath))) {
+      fs.mkdirSync(path.dirname(imageUploadPath), { recursive: true });
+    }
+
+    await avatar.mv(imageUploadPath);
+    res.status(200).json({
+      success: true,
+      message: 'Profile picture updated successfully',
+      avatar: imageName,
     });
   } catch (error) {
     console.log(error);
@@ -675,8 +717,7 @@ const getSingleProfile = async (req, res) => {
 // Update User
 const updateUser = async (req, res) => {
   const id = req.user.id;
-  const { password, ...restBody } = req.body; // Destructure password from req.body
-
+  const { phoneNumber, username, rememberDevice, address, avatar } = req.body;
   try {
     // Check if rememberDevice is true
 
@@ -688,20 +729,28 @@ const updateUser = async (req, res) => {
         message: 'User not found',
       });
     }
-    if (restBody.rememberDevice) {
+    if (rememberDevice) {
       const device = req.headers['user-agent'];
       user.rememberedDevices.push(device);
     }
-    if (!restBody.rememberDevice) {
+    if (!rememberDevice) {
       const device = req.headers['user-agent'];
       user.rememberedDevices = user.rememberedDevices.filter(
         (d) => d !== device
       );
     }
 
-    user.username = restBody.username;
-    user.phoneNumber = restBody.phoneNumber;
-    user.email = restBody.email;
+    const encryptedPhoneNumber = await encrypt(phoneNumber);
+    const encryptedUsername = await encrypt(username);
+    const encryptAddress = await encrypt(address);
+
+    user.phoneNumber = encryptedPhoneNumber;
+    user.username = encryptedUsername;
+    user.address = encryptAddress;
+
+    if (avatar) {
+      user.avatar = avatar;
+    }
 
     const updatedUser = await user.save();
 
@@ -804,4 +853,5 @@ module.exports = {
   getToken,
   verifyRegisterOTP,
   verifyLoginOTP,
+  uploadProfilePicture,
 };

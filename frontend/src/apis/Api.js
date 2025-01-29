@@ -27,6 +27,7 @@ Api.interceptors.request.use(
 );
 
 // API Endpoints
+
 export const registerUserApi = (data) => Api.post('/api/user/create', data);
 export const loginUserApi = (data) => Api.post('/api/user/login', data);
 export const createMovieApi = (data) => Api.post('/api/movie/create', data);
@@ -81,3 +82,11 @@ export const verifyRegisterOtpApi = (data) =>
 // verify_login_otp
 export const verifyLoginOtpApi = (data) =>
   Api.put('/api/user/verify_login_otp', data);
+
+// upload_profile_picture
+export const uploadProfilePictureApi = (data) =>
+  Api.post('/api/user/upload_profile_picture', data, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });

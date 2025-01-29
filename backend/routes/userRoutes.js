@@ -36,5 +36,12 @@ router.put(
 // verifyLoginOTP
 router.put('/verify_login_otp', publicGuard, userController.verifyLoginOTP);
 
+// uploadProfilePicture
+router.post(
+  '/upload_profile_picture',
+  authGuard,
+  userController.uploadProfilePicture
+);
+
 // exporting the router
 module.exports = router;

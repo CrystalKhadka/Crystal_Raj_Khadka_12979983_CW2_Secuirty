@@ -1,68 +1,79 @@
 const mongoose = require('mongoose');
 
-const userSchema = new mongoose.Schema({
-  username: {
-    type: String,
-    required: true,
-  },
-  phoneNumber: {
-    type: String,
-  },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  password: {
-    type: String,
-    required: true,
-  },
-  isAdmin: {
-    type: Boolean,
-    default: false,
-  },
-  verifyOTP: {
-    type: Number,
-    default: null,
-  },
-  verifyExpires: {
-    type: Date,
-    default: null,
-  },
-  isVerified: {
-    type: Boolean,
-    default: false,
-  },
+const userSchema = new mongoose.Schema(
+  {
+    username: {
+      type: String,
+      required: true,
+    },
+    phoneNumber: {
+      type: String,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    password: {
+      type: String,
+      required: true,
+    },
+    isAdmin: {
+      type: Boolean,
+      default: false,
+    },
+    verifyOTP: {
+      type: Number,
+      default: null,
+    },
+    verifyExpires: {
+      type: Date,
+      default: null,
+    },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
 
-  resetPasswordOTP: {
-    type: Number,
-    default: null,
-  },
-  resetPasswordExpires: {
-    type: Date,
-    default: null,
-  },
-  accountLockUntil: {
-    type: Date,
-    default: null, // Date until the account is locked
-  },
-  loginAttempts: {
-    type: Number,
-    default: 0, // Number of failed login attempts
-  },
-  loginTry: {
-    type: Number,
-    default: 0, // Track login attempts within a session
-  },
-  loginDevices: [],
+    resetPasswordOTP: {
+      type: Number,
+      default: null,
+    },
+    resetPasswordExpires: {
+      type: Date,
+      default: null,
+    },
+    accountLockUntil: {
+      type: Date,
+      default: null, // Date until the account is locked
+    },
+    loginAttempts: {
+      type: Number,
+      default: 0, // Number of failed login attempts
+    },
+    loginTry: {
+      type: Number,
+      default: 0, // Track login attempts within a session
+    },
+    loginDevices: [],
 
-  rememberedDevices: [],
-  passwordExpiresAt: {
-    type: Date,
-    default: null,
+    rememberedDevices: [],
+    passwordExpiresAt: {
+      type: Date,
+      default: null,
+    },
+    oldPasswords: [],
+    address: {
+      type: String,
+    },
+    avatar: {
+      type: String,
+    },
   },
-  oldPasswords: [],
-});
+  {
+    timestamps: true,
+  }
+);
 
 // Define a virtual property to check if the account is locked
 userSchema.virtual('isLocked').get(function () {
@@ -93,7 +104,7 @@ userSchema.methods.incrementLoginAttempts = async function () {
   if (this.loginAttempts >= MAX_LOGIN_ATTEMPTS) {
     // Lock the account
     this.accountLockUntil = Date.now() + LOCK_TIME;
-  } 
+  }
 
   await this.save();
 };

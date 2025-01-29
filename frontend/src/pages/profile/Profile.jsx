@@ -18,7 +18,11 @@ import {
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { getSingleProfileApi, updateProfileApi } from '../../apis/Api';
+import {
+  getSingleProfileApi,
+  updateProfileApi,
+  uploadProfilePictureApi,
+} from '../../apis/Api';
 
 const Profile = () => {
   const theme = useTheme();
@@ -32,9 +36,7 @@ const Profile = () => {
     password: '',
     avatar: null,
     rememberDevice: false,
-    bio: '',
-    location: '',
-    website: '',
+    address: '',
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -70,10 +72,25 @@ const Profile = () => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setFormData((prev) => ({
-        ...prev,
-        avatar: file,
-      }));
+      // check the mime type
+      if (file.type !== 'image/jpeg' && file.type !== 'image/png') {
+        toast.warning('Please upload a JPEG or PNG image');
+        return;
+      }
+      const form = new FormData();
+      form.append('avatar', file);
+      uploadProfilePictureApi(form)
+        .then((res) => {
+          if (res.status === 200) {
+            setFormData((prev) => ({
+              ...prev,
+              avatar: res.data.avatar,
+            }));
+          }
+        })
+        .catch((error) => {
+          toast.error(error.response?.data?.message || 'Image upload failed');
+        });
     }
   };
 
@@ -127,7 +144,11 @@ const Profile = () => {
             textAlign: 'center',
           }}>
           <Avatar
-            src={formData.avatar ? URL.createObjectURL(formData.avatar) : null}
+            src={
+              formData.avatar
+                ? `https://localhost:5000/avatar/${formData.avatar}`
+                : null
+            }
             sx={{ width: 120, height: 120, mx: 'auto', mb: 2 }}
           />
           <input
@@ -200,30 +221,17 @@ const Profile = () => {
 
               <Grid
                 item
-                xs={12}
-                sm={6}>
+                xs={12}>
                 <TextField
                   fullWidth
-                  name='location'
-                  label='Location'
-                  value={formData.location}
+                  name='address'
+                  label='address'
+                  value={formData.address}
                   onChange={handleChange}
                   variant='outlined'
                 />
               </Grid>
-              <Grid
-                item
-                xs={12}
-                sm={6}>
-                <TextField
-                  fullWidth
-                  name='website'
-                  label='Website'
-                  value={formData.website}
-                  onChange={handleChange}
-                  variant='outlined'
-                />
-              </Grid>
+
               <Grid
                 item
                 xs={12}>

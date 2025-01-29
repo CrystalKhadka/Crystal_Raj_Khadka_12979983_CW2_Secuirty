@@ -25,7 +25,8 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import zxcvbn from 'zxcvbn'; // Import zxcvbn for password strength evaluation
-import { registerUserApi } from '../../apis/Api'; // Replace with your actual API endpoint
+import { registerUserApi, verifyRegisterOtpApi } from '../../apis/Api'; // Replace with your actual API endpoint
+import VerificationModal from '../../components/VerificationModel';
 
 const Register = () => {
   const theme = useTheme();
@@ -56,7 +57,25 @@ const Register = () => {
     confirmPassword: false,
   });
 
+  const [email, setEmail] = useState('');
+
   const [isLoading, setIsLoading] = useState(false);
+  const [openRegisterVerificationModal, setOpenRegisterVerificationModal] =
+    useState(false);
+  const [isSentOtp, setIsSentOtp] = useState(false);
+
+  const handleRegisterVerification = (otpString) => {
+    console.log(otpString);
+    verifyRegisterOtpApi({ email, otp: otpString })
+      .then((res) => {
+        toast.success(res.data.message);
+        localStorage.setItem('token', res.data.token);
+        window.location.href = '/homepage';
+      })
+      .catch((err) => {
+        toast.error(err.response?.data?.message || 'Verification failed');
+      });
+  };
 
   // Handle form input changes
   const handleChange = (field) => (event) => {
@@ -72,6 +91,10 @@ const Register = () => {
         score: strength.score,
         feedback: strength.feedback.suggestions.join(' ') || 'Strong password!',
       });
+    }
+
+    if (field === 'email') {
+      setEmail(value);
     }
   };
 
@@ -147,7 +170,11 @@ const Register = () => {
 
     try {
       const res = await registerUserApi(data); // Call API to register user
-      toast.success(res.data.message);
+      if (res.status === 201) {
+        toast.success(res.data.message);
+        setOpenRegisterVerificationModal(true);
+        setIsSentOtp(true);
+      }
     } catch (err) {
       if (err.response) {
         toast.warning(err.response.data.message);
@@ -234,7 +261,7 @@ const Register = () => {
                 <Stack spacing={2}>
                   <TextField
                     {...textFieldProps}
-                    label='Username'
+                    label='Full Name'
                     error={!!errors.username}
                     helperText={errors.username}
                     value={formData.username}
@@ -403,6 +430,13 @@ const Register = () => {
               </form>
             </Box>
           </Fade>
+          <VerificationModal
+            open={openRegisterVerificationModal}
+            onClose={() => setOpenRegisterVerificationModal(false)}
+            isRegistration={true}
+            onVerify={handleRegisterVerification}
+            email={email}
+          />
         </Paper>
       </Grow>
     </Container>

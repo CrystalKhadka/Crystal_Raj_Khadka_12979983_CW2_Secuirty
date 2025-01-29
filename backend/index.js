@@ -61,7 +61,6 @@ const limiter = rateLimit({
 // app.use(limiter);
 
 // Use Helmet middleware
-// app.use(helmet());
 
 // apply cookie parser
 app.use(cookieParser()); // Enable cookie parsing
