@@ -58,7 +58,7 @@ const limiter = rateLimit({
 });
 
 // Apply the rate limit to all routes
-// app.use(limiter);
+app.use(limiter);
 
 // Use Helmet middleware
 
@@ -69,10 +69,11 @@ app.use(cookieParser()); // Enable cookie parsing
 // Enable file upload
 app.use(
   accessFormData({
-    limits: { fileSize: 2 * 1024 * 1024 }, // Limit file size to 2MB
+    limits: { fileSize: 5 * 1024 * 1024 }, // Limit file size to 2MB
     abortOnLimit: true, // Abort upload if file exceeds size limit
     safeFileNames: true, // Sanitize filenames automatically
     preserveExtension: true, // Preserve file extensions
+    allowedTypes: ['image/jpeg', 'image/png'],
   })
 );
 

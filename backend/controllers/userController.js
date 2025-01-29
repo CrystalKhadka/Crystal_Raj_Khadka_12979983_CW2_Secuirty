@@ -678,6 +678,41 @@ const uploadProfilePicture = async (req, res) => {
   const id = req.user.id;
   const { avatar } = req.files;
 
+  // Check if a file was uploaded
+  if (!avatar) {
+    return res.status(400).json({
+      success: false,
+      message: 'No file uploaded',
+    });
+  }
+
+  // Check if the file is in allowed types
+  const allowedTypes = ['image/jpeg', 'image/png'];
+  if (!allowedTypes.includes(avatar.mimetype)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid file type',
+    });
+  }
+
+  // Check if the file size is less than 5MB
+  if (avatar.size > process.env.MAX_FILE_SIZE) {
+    return res.status(400).json({
+      success: false,
+      message: 'File size is too large',
+    });
+  }
+
+  // Check the allowed extensions
+  const allowedExtensions = ['jpg', 'jpeg', 'png'];
+  const fileExtension = avatar.name.split('.').pop().toLowerCase();
+  if (!allowedExtensions.includes(fileExtension)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid file extension',
+    });
+  }
+
   try {
     const user = await userModel.findById(id);
     if (!user) {

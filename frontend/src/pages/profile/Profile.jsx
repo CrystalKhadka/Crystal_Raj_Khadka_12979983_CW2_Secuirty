@@ -65,10 +65,6 @@ const Profile = () => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    // DOMPurify to sanitize user input
-    // Allow only text, numbers, and spaces
-    // Remove the tag
-
     const sanitizedValue = DOMPurify.sanitize(value, {
       // Remove the input if not text, number, or space
       ALLOWED_TAGS: [],
@@ -85,6 +81,14 @@ const Profile = () => {
     if (file) {
       // check the mime type
       if (file.type !== 'image/jpeg' && file.type !== 'image/png') {
+        toast.warning('Please upload a JPEG or PNG image');
+        return;
+      }
+      // Check the extension
+      if (
+        file.name.split('.').pop() !== 'jpg' &&
+        file.name.split('.').pop() !== 'png'
+      ) {
         toast.warning('Please upload a JPEG or PNG image');
         return;
       }
