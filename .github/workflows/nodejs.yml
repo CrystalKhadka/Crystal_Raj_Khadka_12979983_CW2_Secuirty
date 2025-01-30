@@ -1,0 +1,31 @@
+name: Node.js Backend Security Scan
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lint-backend:
+    name: Run ESLint on Node.js Backend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js for Backend
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: npm install
+
+      - name: Run ESLint on Node.js
+        working-directory: ./backend
+        run: npx eslint . --ext .js,.jsx,.ts,.tsx
