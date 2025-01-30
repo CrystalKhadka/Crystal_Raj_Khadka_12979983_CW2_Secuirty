@@ -84,6 +84,9 @@ export const updateProfileApi = (data) =>
   Api.put('/api/user/update_profile', data);
 export const initializeKhaltiApi = (data) =>
   Api.post('/api/payment/initialize_khalti', data);
+// complete-khalti-payment
+export const completeKhaltiPaymentApi = (data) =>
+  Api.post('/api/payment/complete-khalti-payment', data);
 export const contactUsApi = (data) => Api.post('/api/contact/create', data);
 export const getContactMessagesApi = () => Api.get('/api/contact/get_contact');
 export const getDashboardStatsApi = () => Api.get('/api/admin/dashboard_stats');

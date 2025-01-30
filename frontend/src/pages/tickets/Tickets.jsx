@@ -1,5 +1,6 @@
 import {
   Box,
+  Button,
   Card,
   CardContent,
   CardHeader,
@@ -11,6 +12,7 @@ import {
   Typography,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import { Download } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import React, { useEffect, useState } from 'react';
 import { getBookingsByUserApi } from '../../apis/Api';
@@ -55,6 +57,58 @@ const Tickets = () => {
       groups[date].push(ticket);
     });
     return groups;
+  };
+
+  const downloadTicket = (ticket, index) => {
+    // Create a temporary container for the ticket
+    const ticketElement = document.createElement('div');
+    ticketElement.innerHTML = `
+      <div style="padding: 20px; font-family: Arial, sans-serif; max-width: 600px; border: 2px solid #ccc; margin: 20px auto;">
+        <h2 style="color: #333;">${ticket.show.movieId.movieName}</h2>
+        <div style="margin: 10px 0;">
+          <p><strong>Date:</strong> ${new Date(
+            ticket.show.showDate
+          ).toLocaleDateString()}</p>
+          <p><strong>Time:</strong> ${ticket.show.showTime}</p>
+        </div>
+        <div style="margin: 10px 0;">
+          <h3>Seats:</h3>
+          ${ticket.seats
+            .map((seat) => `<p>Seat Number: ${seat.seatNo}</p>`)
+            .join('')}
+        </div>
+        <div style="margin: 10px 0;">
+          <h3>User Information:</h3>
+          <p><strong>Username:</strong> ${ticket.user.username}</p>
+          <p><strong>Email:</strong> ${ticket.user.email}</p>
+          <p><strong>Phone:</strong> ${ticket.user.phoneNumber}</p>
+        </div>
+        <div style="margin: 10px 0; text-align: right;">
+          <h3>Price: Rs.${ticket.price}</h3>
+        </div>
+        <div style="margin: 10px 0;">
+          <p><strong>Ticket ID:</strong> ${ticket._id}</p>
+        </div>
+      </div>
+    `;
+
+    // Convert the HTML to a Blob
+    const blob = new Blob([ticketElement.outerHTML], { type: 'text/html' });
+
+    // Create a download link
+    const downloadLink = document.createElement('a');
+    downloadLink.href = URL.createObjectURL(blob);
+    downloadLink.download = `ticket-${ticket.show.movieId.movieName}-${new Date(
+      ticket.show.showDate
+    ).toLocaleDateString()}.html`;
+
+    // Trigger the download
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+
+    // Clean up
+    URL.revokeObjectURL(downloadLink.href);
   };
 
   const groupedTickets = groupTicketsByDate(tickets);
@@ -104,10 +158,24 @@ const Tickets = () => {
                               showDate
                             ).toLocaleDateString()} at ${showTime}`}
                             action={
-                              <QRCodeSVG
-                                value={`Ticket ID: ${ticket._id}`}
-                                size={64}
-                              />
+                              <Box
+                                sx={{
+                                  display: 'flex',
+                                  gap: 2,
+                                  alignItems: 'center',
+                                }}>
+                                <QRCodeSVG
+                                  value={`Ticket ID: ${ticket._id}`}
+                                  size={64}
+                                />
+                                <Button
+                                  variant='contained'
+                                  color='primary'
+                                  onClick={() => downloadTicket(ticket, index)}
+                                  startIcon={<Download size={20} />}>
+                                  Download
+                                </Button>
+                              </Box>
                             }
                           />
                           <CardContent>

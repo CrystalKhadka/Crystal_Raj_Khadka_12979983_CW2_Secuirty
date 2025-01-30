@@ -5,8 +5,6 @@ const paymentSchema = new mongoose.Schema(
     pidx: String,
     productId: { type: mongoose.Schema.Types.ObjectId, ref: 'PurchasedItem' },
     amount: Number,
-    dataFromVerificationReq: Object,
-    apiQueryFromUser: Object,
     paymentGateway: { type: String, enum: ['khalti'] },
     status: {
       type: String,

@@ -7,6 +7,6 @@ const {
 const { authGuard } = require('../middleware/authGuard');
 
 router.post('/initialize_khalti', authGuard, initializeKhalti);
-router.get('/complete-khalti-payment', authGuard, completeKhaltiPayment);
+router.post('/complete-khalti-payment', authGuard, completeKhaltiPayment);
 
 module.exports = router;

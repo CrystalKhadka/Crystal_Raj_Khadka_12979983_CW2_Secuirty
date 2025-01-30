@@ -144,7 +144,7 @@ const initializeKhalti = async (req, res) => {
 
 // Route handler to complete Khalti payment
 const completeKhaltiPayment = async (req, res) => {
-  console.log(req.query);
+  console.log(req.body);
   const {
     pidx,
 
@@ -153,7 +153,7 @@ const completeKhaltiPayment = async (req, res) => {
     productId,
 
     transactionId,
-  } = req.query;
+  } = req.body;
 
   try {
     const paymentInfo = await verifyKhaltiPayment(pidx);
@@ -191,20 +191,29 @@ const completeKhaltiPayment = async (req, res) => {
       { new: true }
     );
 
-    // Create or update payment record
-    const paymentData = await Payment.findOneAndUpdate(
-      { transactionId: transactionId },
-      {
-        pidx,
-        productId: productId,
-        amount,
-        dataFromVerificationReq: paymentInfo,
-        apiQueryFromUser: req.query,
-        paymentGateway: 'khalti',
-        status: 'success',
-      },
-      { upsert: true, new: true }
+    const booking = await Booking.findById(purchasedItemData.item);
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: 'Booking not found',
+      });
+    }
+
+    // Update booking status to completed
+    await Booking.findByIdAndUpdate(
+      purchasedItemData.item,
+      { $set: { status: 'completed' } },
+      { new: true }
     );
+
+    // Create payment record
+    const paymentData = await Payment.create({
+      amount: amount,
+      productId: purchasedItemData._id,
+      pidx: pidx,
+      status: 'success',
+      paymentGateway: 'khalti',
+    });
 
     // Send success response
     res.status(200).json({

@@ -15,8 +15,6 @@
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.7.9",
     "axios-mock-adapter": "^2.0.0",
-    "bootstrap": "^5.3.3",
-    "bootstrap-icons": "^1.11.3",
     "cine_ease": "file:",
     "date-fns": "^3.6.0",
     "dompurify": "^3.2.3",

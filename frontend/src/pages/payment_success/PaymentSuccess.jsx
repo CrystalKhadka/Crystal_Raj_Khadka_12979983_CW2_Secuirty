@@ -8,8 +8,9 @@ import {
   Container,
   Typography,
 } from '@mui/material';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { completeKhaltiPaymentApi } from '../../apis/Api';
 
 const PaymentSuccess = () => {
   const location = useLocation();
@@ -18,6 +19,25 @@ const PaymentSuccess = () => {
     [location.search]
   );
   const transactionId = queryParams.get('transaction_id');
+  const [checked, setChecked] = useState(false);
+
+  useEffect(() => {
+    if (checked) {
+      return;
+    }
+    const data = {
+      pidx: queryParams.get('pidx'),
+
+      amount: queryParams.get('amount'),
+
+      productId: queryParams.get('purchase_order_id'),
+
+      transactionId: queryParams.get('transaction_id'),
+    };
+    completeKhaltiPaymentApi(data)
+      .then(() => setChecked(true))
+      .catch((error) => console.error(error));
+  }, [checked, queryParams]);
 
   return (
     <Container
