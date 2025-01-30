@@ -1,15 +1,15 @@
 // contact Us controller
 
-const contactModel = require("../models/contactModel");
-const User = require("../models/userModel");
-const path = require("path");
+const contactModel = require('../models/contactModel');
+const User = require('../models/userModel');
+const path = require('path');
 
 const addContact = async (req, res) => {
   const { name, subject, message } = req.body;
   if (!name || !subject || !message) {
     return res.status(400).json({
       success: false,
-      message: "All fields are required",
+      message: 'All fields are required',
     });
   }
   try {
@@ -22,14 +22,14 @@ const addContact = async (req, res) => {
     await contact.save();
     res.status(201).json({
       success: true,
-      message: "Message sent successfully",
+      message: 'Message sent successfully',
       id: contact._id,
     });
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     res.status(500).json({
       success: false,
-      message: "Internal Server Error",
+      message: 'Internal Server Error',
       error: error,
     });
   }
@@ -41,14 +41,14 @@ const getContact = async (req, res) => {
     const contacts = await contactModel.find();
     res.status(200).json({
       success: true,
-      message: "Messages fetched successfully",
+      message: 'Messages fetched successfully',
       contacts: contacts,
     });
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     res.status(500).json({
       success: false,
-      message: "Internal server error",
+      message: 'Internal server error',
       error: error,
     });
   }

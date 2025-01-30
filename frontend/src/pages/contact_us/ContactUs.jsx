@@ -1,3 +1,4 @@
+import dompurify from 'dompurify';
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -13,7 +14,8 @@ const ContactUs = () => {
   });
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const sanitizedValue = dompurify.sanitize(e.target.value);
+    setFormData({ ...formData, [e.target.name]: sanitizedValue });
   };
 
   const handleSubmit = async (e) => {
@@ -42,12 +44,12 @@ const ContactUs = () => {
 
     getSingleProfileApi()
       .then((res) => {
-        console.log('API response:', res.data);
+        // console.log('API response:', res.data);
         const { username, email } = res.data.user;
         setFormData({ ...formData, name: username, email });
       })
       .catch((error) => {
-        console.log(error);
+        // console.log(error);
       });
   }, []);
 

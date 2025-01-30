@@ -43,7 +43,7 @@ const Tickets = () => {
         setTickets(sortedTickets);
       })
       .catch((error) => {
-        console.log(error);
+        // console.log(error);
       });
   }, []);
 

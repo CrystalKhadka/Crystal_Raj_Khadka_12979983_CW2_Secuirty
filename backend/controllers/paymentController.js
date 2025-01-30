@@ -8,7 +8,7 @@
 
 //     // Handle successful verification (e.g., update the database)
 //     const { idx } = data;
-//     console.log('Payment verified:', idx);
+//     // console.log('Payment verified:', idx);
 //     // Update your database or perform other actions here
 
 //     res.json({ success: true, idx });
@@ -29,7 +29,7 @@ const Booking = require('../models/bookingModel');
 
 // Function to verify Khalti Payment
 const verifyKhaltiPayment = async (pidx) => {
-  console.log('Verifying Khalti payment:', pidx);
+  // console.log('Verifying Khalti payment:', pidx);
   const headersList = {
     Authorization: `Key ${process.env.KHALTI_SECRET_KEY}`,
     'Content-Type': 'application/json',
@@ -96,16 +96,16 @@ const initializeKhaltiPayment = async (details) => {
 
 // Route handler to initialize Khalti payment
 const initializeKhalti = async (req, res) => {
-  // console.log("hit");
+  // // console.log("hit");
   try {
-    console.log(req.body);
+    // console.log(req.body);
     const { itemId, totalPrice } = req.body;
-    console.log(parseInt(totalPrice));
+    // console.log(parseInt(totalPrice));
     // Verify item data using the correct model (Insurance in your case)
     const data = await Booking.findById(itemId);
-    console.log(data);
+    // console.log(data);
     if (data.price * 100 !== parseInt(totalPrice)) {
-      console.log(data.price * 100, totalPrice);
+      // console.log(data.price * 100, totalPrice);
       // Ensure the price match
       return res.status(400).json({
         success: false,
@@ -144,7 +144,7 @@ const initializeKhalti = async (req, res) => {
 
 // Route handler to complete Khalti payment
 const completeKhaltiPayment = async (req, res) => {
-  console.log(req.body);
+  // console.log(req.body);
   const {
     pidx,
 

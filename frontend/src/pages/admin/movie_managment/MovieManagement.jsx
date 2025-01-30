@@ -54,7 +54,9 @@ const MovieManagement = () => {
   useEffect(() => {
     getAllMoviesApi()
       .then((res) => setMovies(res.data.movies))
-      .catch((error) => console.log(error));
+      .catch((error) => {
+        // console.log(error)
+      });
   }, []);
 
   const handleInputChange = (e) => {

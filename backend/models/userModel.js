@@ -135,5 +135,11 @@ userSchema.methods.hasExceededMaxLoginAttempts = function () {
   return this.loginAttempts >= 5;
 };
 
+// reset the account lock
+userSchema.methods.resetAccountLock = async function () {
+  this.accountLockUntil = null;
+  await this.save();
+};
+
 const User = mongoose.model('users', userSchema);
 module.exports = User;

@@ -48,11 +48,6 @@ const CustomerManagement = () => {
       });
   };
 
-  const handleDeleteClick = (user) => {
-    setUserToDelete(user);
-    setDeleteDialogOpen(true);
-  };
-
   const handleDeleteConfirm = () => {
     if (!userToDelete) return;
 

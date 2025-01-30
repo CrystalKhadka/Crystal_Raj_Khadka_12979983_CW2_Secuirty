@@ -27,7 +27,7 @@ const decrypt = (text) => {
 
 const createUser = async (req, res) => {
   // Check incoming data
-  console.log(req.body);
+  // console.log(req.body);
 
   // Destructure the incoming data
   const { email, username, phoneNumber, password } = req.body;
@@ -107,10 +107,10 @@ const createUser = async (req, res) => {
       isVerified: false,
     });
 
-    console.log(newUser);
+    // console.log(newUser);
 
     const randomOTP = Math.floor(100000 + Math.random() * 900000);
-    console.log(randomOTP);
+    // console.log(randomOTP);
 
     newUser.verifyOTP = randomOTP;
     newUser.verifyExpires = Date.now() + 10 * 60 * 1000; // OTP valid for 10 minutes
@@ -133,7 +133,7 @@ const createUser = async (req, res) => {
       message: 'User Created Successfully!',
     });
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     res.status(500).json({
       success: false,
       message: 'Internal Server Error!',
@@ -142,7 +142,7 @@ const createUser = async (req, res) => {
 };
 
 const loginUser = async (req, res) => {
-  console.log(req.body); // Log incoming data for debugging
+  // console.log(req.body); // Log incoming data for debugging
 
   const { email, password, captchaToken } = req.body;
   const device = req.headers['user-agent']; // Identify the device using User-Agent
@@ -221,7 +221,7 @@ const loginUser = async (req, res) => {
     if (!user.isVerified) {
       // Generate OTP for verification
       const randomOTP = Math.floor(100000 + Math.random() * 900000);
-      console.log(randomOTP);
+      // console.log(randomOTP);
 
       user.verifyOTP = randomOTP;
       user.verifyExpires = Date.now() + 10 * 60 * 1000; // OTP valid for 10 minutes
@@ -250,7 +250,7 @@ const loginUser = async (req, res) => {
     if (!user.rememberedDevices.includes(device)) {
       // Generate OTP for verification
       const randomOTP = Math.floor(100000 + Math.random() * 900000);
-      console.log(randomOTP);
+      // console.log(randomOTP);
 
       user.verifyOTP = randomOTP;
       user.verifyExpires = Date.now() + 10 * 60 * 1000; // OTP valid for 10 minutes
@@ -301,7 +301,7 @@ const loginUser = async (req, res) => {
         { expiresIn: process.env.JWT_EXPIRY }
       );
 
-      console.log(token);
+      // console.log(token);
 
       // Send the response with both session and token
       return res.status(200).json({
@@ -386,7 +386,7 @@ const verifyRegisterOTP = async (req, res) => {
       });
     });
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     return res.status(500).json({
       success: false,
       message: 'Internal Server Error',
@@ -455,7 +455,7 @@ const verifyLoginOTP = async (req, res) => {
       });
     });
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     return res.status(500).json({
       success: false,
       message: 'Internal Server Error',
@@ -465,7 +465,7 @@ const verifyLoginOTP = async (req, res) => {
 };
 
 const forgotPassword = async (req, res) => {
-  console.log(req.body);
+  // console.log(req.body);
 
   const { email } = req.body;
 
@@ -485,7 +485,7 @@ const forgotPassword = async (req, res) => {
     }
     // Generate OTP
     const randomOTP = Math.floor(100000 + Math.random() * 900000);
-    console.log(randomOTP);
+    // console.log(randomOTP);
 
     user.resetPasswordOTP = randomOTP;
     user.resetPasswordExpires = Date.now() + 600000; // 10 minutes
@@ -506,7 +506,7 @@ const forgotPassword = async (req, res) => {
       message: 'OTP sent to your email',
     });
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     return res.status(500).json({
       success: false,
       message: 'Internal server error',
@@ -515,7 +515,7 @@ const forgotPassword = async (req, res) => {
 };
 
 const resetPassword = async (req, res) => {
-  console.log(req.body);
+  // console.log(req.body);
 
   const { email, otp, password } = req.body;
 
@@ -593,13 +593,15 @@ const resetPassword = async (req, res) => {
     user.oldPasswords.push(hashedPassword);
     user.passwordExpiresAt = Date.now() + 1000 * 60 * 60 * 24 * 90;
     await user.save();
+    await user.resetAccountLock();
+    await user.resetLoginAttempts();
 
     res.status(200).json({
       success: true,
       message: 'Password reset successfully',
     });
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     return res.status(500).json({
       success: false,
       message: 'Internal server error',
@@ -617,7 +619,7 @@ const getAllUsers = async (req, res) => {
       users: allUsers,
     });
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     res.status(500).json({
       success: false,
       message: 'Internal server error',
@@ -664,7 +666,7 @@ const getSingleProfile = async (req, res) => {
       },
     });
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     res.status(500).json({
       success: false,
       message: 'Internal server error',
@@ -740,7 +742,7 @@ const uploadProfilePicture = async (req, res) => {
       avatar: imageName,
     });
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     res.status(500).json({
       success: false,
       message: 'Internal server error',
@@ -813,7 +815,7 @@ const updateUser = async (req, res) => {
 // get token
 const getToken = async (req, res) => {
   try {
-    console.log(req.body);
+    // console.log(req.body);
     const { id } = req.body;
 
     const user = await userModel.findById(id);
@@ -834,7 +836,7 @@ const getToken = async (req, res) => {
       token: token,
     });
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     return res.status(500).json({
       success: false,
       message: 'Internal Server Error',
@@ -867,7 +869,7 @@ const validateCaptcha = async (recaptchaToken) => {
       };
     }
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     return {
       success: false,
       message: 'Internal Server Error',
@@ -892,7 +894,7 @@ const deleteUser = async (req, res) => {
       message: 'User deleted successfully',
     });
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     res.status(500).json({
       success: false,
       message: 'Internal server error',
@@ -930,7 +932,7 @@ const logoutUser = async (req, res) => {
       message: 'User logged out successfully',
     });
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     res.status(500).json({
       success: false,
       message: 'Internal server error',

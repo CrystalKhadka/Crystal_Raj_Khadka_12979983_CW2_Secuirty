@@ -6,7 +6,7 @@ dotenv.config();
 
 const connectDatabase = () => {
   mongoose.connect(process.env.MONGODB_LOCAL).then(() => {
-    console.log('Database Connected!');
+    // console.log('Database Connected!');
   });
 };
 

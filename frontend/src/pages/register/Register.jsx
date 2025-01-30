@@ -65,7 +65,7 @@ const Register = () => {
   const [isSentOtp, setIsSentOtp] = useState(false);
 
   const handleRegisterVerification = (otpString) => {
-    console.log(otpString);
+    // console.log(otpString);
     verifyRegisterOtpApi({ email, otp: otpString })
       .then((res) => {
         toast.success(res.data.message);

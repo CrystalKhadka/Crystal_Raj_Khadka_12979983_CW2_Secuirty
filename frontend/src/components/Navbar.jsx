@@ -35,7 +35,9 @@ const Navbar = () => {
         localStorage.removeItem('token');
         navigate('/login', { replace: true });
       })
-      .catch((error) => console.log(error));
+      .catch((error) => {
+        // console.log(error)
+      });
   };
 
   useEffect(() => {
@@ -44,7 +46,7 @@ const Navbar = () => {
         setUser(res.data.user);
       })
       .catch((err) => {
-        console.log(err);
+        // console.log(err);
       });
   }, []);
 

@@ -29,7 +29,7 @@ const BookingManagement = () => {
         setLoading(false);
       })
       .catch((error) => {
-        console.log(error);
+        // console.log(error);
         toast.error('Failed to fetch bookings. Please try again later.');
         setLoading(false);
       });

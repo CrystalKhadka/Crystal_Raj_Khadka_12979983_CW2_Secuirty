@@ -83,7 +83,7 @@ const Homepage = () => {
         setUser(response.data.user);
       })
       .catch((error) => {
-        console.log(error);
+        // console.log(error);
       });
 
     fetchData();
@@ -91,7 +91,7 @@ const Homepage = () => {
 
   const debouncedSearch = useCallback(
     debounce((term) => {
-      console.log('Searching for:', term);
+      // console.log('Searching for:', term);
     }, 500),
     []
   );

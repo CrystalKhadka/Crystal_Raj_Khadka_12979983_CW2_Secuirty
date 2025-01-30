@@ -45,7 +45,10 @@
     "build": "set \"GENERATE_SOURCEMAP=false\" && react-scripts build",
     "deploy": "serve -s build --listen 3000 --ssl-cert ./certificate/root.crt --ssl-key ./certificate/root.key",
     "test": "react-scripts test --transformIgnorePatterns \"node_modules/(?!axios)/\"",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "snyk-test": "snyk test",
+    "snyk-monitor": "snyk monitor",
+    "snyk-fix": "snyk fix"
   },
   "eslintConfig": {
     "extends": [
@@ -69,8 +72,6 @@
     "@testing-library/jest-dom": "^6.4.8",
     "@testing-library/react": "^16.0.0",
     "cross-env": "^7.0.3",
-    "eslint": "^8.57.1",
-    "eslint-plugin-security": "^3.0.1",
     "jest": "^27.5.1"
   }
 }

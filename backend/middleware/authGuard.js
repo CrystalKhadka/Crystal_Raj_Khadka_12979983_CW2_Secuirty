@@ -66,7 +66,7 @@ const authGuard = async (req, res, next) => {
         ip: req.ip,
       });
 
-      console.log(req.user);
+      // console.log(req.user);
       return next();
     }
 
@@ -160,7 +160,7 @@ const adminGuard = async (req, res, next) => {
         ip: req.ip,
       });
 
-      console.log(req.user);
+      // console.log(req.user);
 
       return next();
     }

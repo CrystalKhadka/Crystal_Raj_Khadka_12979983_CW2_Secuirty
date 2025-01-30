@@ -1,11 +1,11 @@
-const path = require("path");
-const movieModel = require("../models/movieModel");
-const fs = require("fs");
+const path = require('path');
+const movieModel = require('../models/movieModel');
+const fs = require('fs');
 
 const createMovie = async (req, res) => {
   // Check incoming data
-  console.log(req.body);
-  console.log(req.files);
+  // console.log(req.body);
+  // console.log(req.files);
 
   // Destructuring the body data (json)
   const { movieName, movieGenre, movieDetails, movieRated, movieDuration } =
@@ -21,7 +21,7 @@ const createMovie = async (req, res) => {
   ) {
     return res.status(400).json({
       success: false,
-      message: "Please enter all fields",
+      message: 'Please enter all fields',
     });
   }
 
@@ -29,7 +29,7 @@ const createMovie = async (req, res) => {
   if (!req.files || !req.files.moviePosterImage) {
     return res.status(400).json({
       success: false,
-      message: "Image not found",
+      message: 'Image not found',
     });
   }
 
@@ -59,14 +59,14 @@ const createMovie = async (req, res) => {
     const movie = await newMovie.save();
     res.status(201).json({
       success: true,
-      message: "Movie created successfully",
+      message: 'Movie created successfully',
       data: movie,
     });
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     res.status(500).json({
-      "succ  ess": false,
-      message: "Internal Server Error",
+      'succ  ess': false,
+      message: 'Internal Server Error',
       error: error,
     });
   }
@@ -78,14 +78,14 @@ const getAllMovies = async (req, res) => {
     const allMovies = await movieModel.find({});
     res.status(200).json({
       success: true,
-      message: "Movies fetched successfully",
+      message: 'Movies fetched successfully',
       movies: allMovies,
     });
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     res.status(500).json({
       success: false,
-      message: "Internal server error",
+      message: 'Internal server error',
       error: error,
     });
   }
@@ -100,19 +100,19 @@ const getSingleMovie = async (req, res) => {
     if (!movie) {
       return res.status(400).json({
         success: false,
-        message: "No Movie Found",
+        message: 'No Movie Found',
       });
     }
     res.status(200).json({
       success: true,
-      message: "Movie fetched",
+      message: 'Movie fetched',
       movie: movie,
     });
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     res.status(500).json({
       success: false,
-      message: "Internal server error",
+      message: 'Internal server error',
       error: error,
     });
   }
@@ -124,13 +124,13 @@ const deleteMovie = async (req, res) => {
     await movieModel.findByIdAndDelete(req.params.id);
     res.status(201).json({
       success: true,
-      message: "Movie Deleted Successfully",
+      message: 'Movie Deleted Successfully',
     });
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     res.status(500).json({
       success: false,
-      message: "Internal Server Error",
+      message: 'Internal Server Error',
       error: error,
     });
   }
@@ -172,14 +172,14 @@ const updateMovie = async (req, res) => {
     );
     res.status(201).json({
       success: true,
-      message: "Movie updated successfully",
+      message: 'Movie updated successfully',
       movie: updatedMovie,
     });
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     res.status(500).json({
       success: false,
-      message: "Internal Server Error",
+      message: 'Internal Server Error',
       error: error,
     });
   }
@@ -204,21 +204,21 @@ const paginationMovies = async (req, res) => {
     if (movies.length === 0) {
       return res.status(400).json({
         success: false,
-        message: "No Movies Found",
+        message: 'No Movies Found',
       });
     }
 
     //response
     res.status(201).json({
       success: true,
-      message: "Movie Fetched",
+      message: 'Movie Fetched',
       movies: movies,
     });
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     res.status(500).json({
       success: false,
-      message: "Internal Server Error",
+      message: 'Internal Server Error',
     });
   }
 };
@@ -229,14 +229,14 @@ const getMovieCount = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Movie count fetched successfully",
+      message: 'Movie count fetched successfully',
       movieCount: movieCount,
     });
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     res.status(500).json({
       success: false,
-      message: "Internal server error",
+      message: 'Internal server error',
       error: error,
     });
   }

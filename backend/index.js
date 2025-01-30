@@ -12,7 +12,8 @@ const cookieParser = require('cookie-parser');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const session = require('express-session');
-const MongoStore = require('connect-mongo');
+const morgan = require('morgan');
+
 // Load environment variables from .env file
 dotenv.config();
 
@@ -23,6 +24,9 @@ const options = {
   key: fs.readFileSync('./certificate/server.key'), // Path to your private key
   cert: fs.readFileSync('./certificate/server.crt'), // Path to your certificate
 };
+
+// morgan middleware
+app.use(morgan('dev'));
 
 // Configure CORS policy
 const corsOptions = {
@@ -60,7 +64,25 @@ const limiter = rateLimit({
 // Apply the rate limit to all routes
 app.use(limiter);
 
+// Middleware to set security headers for clickjacking protection
+app.use((req, res, next) => {
+  // X-Frame-Options prevents the page from being embedded in an iframe
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN'); // or 'DENY'
+
+  // Content-Security-Policy's frame-ancestors directive to control who can embed your app
+  res.setHeader('Content-Security-Policy', "frame-ancestors 'self'");
+
+  next();
+});
+
 // Use Helmet middleware
+app.use(
+  helmet({
+    crossOriginEmbedderPolicy: false,
+    crossOriginOpenerPolicy: false,
+    crossOriginResourcePolicy: false,
+  })
+);
 
 // apply cookie parser
 app.use(cookieParser()); // Enable cookie parsing
@@ -127,7 +149,7 @@ app.use('/api/contact', require('./routes/contactRoutes'));
 
 // Starting the HTTPS server
 https.createServer(options, app).listen(PORT, () => {
-  console.log(`Secure server is running on https://localhost:${PORT}`);
+  // console.log(`Secure server is running on https://localhost:${PORT}`);
 });
 
 module.exports = app;

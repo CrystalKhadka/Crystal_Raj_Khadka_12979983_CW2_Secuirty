@@ -140,7 +140,7 @@ const Login = () => {
   const [captchaToken, setCaptchaToken] = useState(null);
 
   const handleVerification = (otpString) => {
-    console.log(otpString);
+    // console.log(otpString);
     verifyLoginOtpApi({ email, otp: otpString })
       .then((res) => {
         toast.success(res.data.message);
@@ -153,7 +153,7 @@ const Login = () => {
   };
 
   const handleRegisterVerification = (otpString) => {
-    console.log(otpString);
+    // console.log(otpString);
     verifyRegisterOtpApi({ email, otp: otpString })
       .then((res) => {
         toast.success(res.data.message);
@@ -248,18 +248,26 @@ const Login = () => {
 
     setIsLoading(true);
     try {
-      const res = await loginUserApi({ email, password, captchaToken });
-      if (res.data.registerOtpRequired) {
-        setOpenRegisterVerificationModal(true);
-      } else if (res.data.otpRequired) {
-        setOpenVerificationModal(true);
-      } else {
-        toast.success(res.data.message);
-        localStorage.setItem('token', res.data.token);
-        window.location.href = '/homepage';
-      }
+      loginUserApi({ email, password, captchaToken })
+        .then((res) => {
+          if (res.data.registerOtpRequired) {
+            setOpenRegisterVerificationModal(true);
+          } else if (res.data.otpRequired) {
+            setOpenVerificationModal(true);
+          } else {
+            toast.success(res.data.message);
+            localStorage.setItem('token', res.data.token);
+            window.location.href = '/homepage';
+          }
+        })
+        .catch((err) => {
+          console.log(err.response);
+          toast.error(err.response?.data?.message || 'Login failed');
+        });
     } catch (err) {
-      toast.error('Login failed');
+      if (err.response) {
+        // toast.error(err.response.data.message || 'Login failed');
+      }
     } finally {
       setIsLoading(false);
     }

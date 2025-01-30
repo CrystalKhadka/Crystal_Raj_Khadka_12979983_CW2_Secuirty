@@ -66,7 +66,7 @@ const AdminNavbar = () => {
         const response = await getSingleProfileApi();
         setAdmin(response.data.user);
       } catch (error) {
-        console.log(error);
+        // console.log(error);
       }
     };
     fetchAdmin();
@@ -78,7 +78,7 @@ const AdminNavbar = () => {
         localStorage.removeItem('token');
         navigate('/login', { replace: true, state: { from: location } });
       })
-      .catch((error) => console.log(error));
+      .catch((error) => {});
   };
 
   return (

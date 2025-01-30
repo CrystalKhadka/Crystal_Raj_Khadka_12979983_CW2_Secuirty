@@ -38,7 +38,7 @@ const ShowManagement = () => {
         setLoading(false);
       })
       .catch((error) => {
-        console.log(error);
+        // console.log(error);
         toast.error('Failed to fetch shows. Please try again later.');
         setLoading(false);
       });
